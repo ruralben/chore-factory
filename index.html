@@ -1,0 +1,3942 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+
+<title>Chore Factory</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+:root{
+  --ground:#EEF0EC; --panel:#FFFFFF; --panel-2:#F6F7F4; --inset:#FAFBF9;
+  --rule:#DCE0D9; --rule-2:#C2C8BE; --rule-3:#9AA396;
+  --ink:#191D19; --ink-2:#596055; --ink-3:#868E82;
+  --marker:#0E5C9E; --marker-2:#0A4779; --marker-soft:#E2EDF6;
+  --red:#B3311D; --red-soft:#F7E4DF; --red-line:#E2B3A8;
+  --amber:#8E620A; --amber-soft:#F7EEDA; --amber-line:#DEC791;
+  --green:#2A6B48; --green-soft:#E1EEE6; --green-line:#AFCFBC;
+  --shadow:0 1px 2px rgba(25,29,25,.05), 0 6px 18px -10px rgba(25,29,25,.22);
+  --f-disp:"Barlow Condensed", "Arial Narrow", system-ui, sans-serif;
+  --f-body:"Barlow", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono:"Barlow", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+/* Light lives on :root; dark lives here and is reached only by the toggle.
+   There is deliberately no prefers-color-scheme block — see
+   1.Claude\_standard-wrapper.html. */
+:root[data-theme="dark"]{
+  --ground:#13161A; --panel:#1B1F24; --panel-2:#22272D; --inset:#171B20;
+  --rule:#2C333A; --rule-2:#3D454D; --rule-3:#5A646D;
+  --ink:#E6EAE5; --ink-2:#A2ABA3; --ink-3:#77817A;
+  --marker:#74B6EE; --marker-2:#A6D2F6; --marker-soft:#16303F;
+  --red:#EB8B76; --red-soft:#3A201A; --red-line:#6B3628;
+  --amber:#E0AE55; --amber-soft:#392C14; --amber-line:#6B5223;
+  --green:#84CBA1; --green-soft:#1A3226; --green-line:#2E5741;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 22px -12px rgba(0,0,0,.7);
+}
+
+*{box-sizing:border-box}
+body{
+  background:var(--ground); color:var(--ink);
+  font-family:var(--f-body); font-size:15px; line-height:1.45;
+  font-variant-numeric:tabular-nums; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1120px; margin:0 auto; padding-inline:16px; padding-block:22px 64px}
+
+/* ---------- masthead ---------- */
+.mast{
+  display:flex; flex-wrap:wrap; align-items:flex-end; gap:14px 20px;
+  padding-bottom:12px; border-bottom:2px solid var(--ink); margin-bottom:6px;
+}
+.mast h1{
+  font-family:var(--f-disp); font-weight:700; font-size:clamp(30px,6.4vw,46px);
+  line-height:.94; letter-spacing:.012em; text-transform:uppercase; margin:0;
+  text-wrap:balance;
+}
+.byline{
+  font-family:var(--f-body); font-size:12.5px; font-style:italic;
+  color:var(--ink-3); margin:5px 0 0;
+}
+/* The standard toggle, copied from 1.Claude\_standard-wrapper.html with this
+   page's own color variables. Symbol only: moon in light, sun in dark. */
+.theme-toggle{
+  flex:none; display:inline-grid; place-items:center;
+  width:40px; height:40px; border-radius:999px;
+  border:1px solid var(--rule-2); background:var(--panel); color:var(--ink-2);
+  cursor:pointer; padding:0; line-height:1;
+  transition:border-color .15s ease, color .15s ease, background .15s ease;
+}
+.theme-toggle:hover{border-color:var(--marker); color:var(--marker)}
+.theme-toggle:focus-visible{outline:2px solid var(--marker); outline-offset:2px}
+.theme-toggle .glyph{font-size:17px; line-height:1}
+.mast .sub{
+  font-family:var(--f-mono); font-size:11px; letter-spacing:.08em;
+  text-transform:uppercase; color:var(--ink-3); margin-top:6px;
+}
+.mast-actions{margin-left:auto; display:flex; gap:8px; flex-wrap:wrap; align-items:center}
+.tally{
+  display:flex; gap:0; border:1px solid var(--rule-2); border-radius:3px;
+  overflow:hidden; background:var(--panel);
+}
+.tally div{padding:5px 11px 6px; border-right:1px solid var(--rule); text-align:center}
+.tally div:last-child{border-right:0}
+.tally b{display:block; font-family:var(--f-mono); font-size:17px; font-weight:600; line-height:1.1}
+.tally span{font-family:var(--f-mono); font-size:9px; letter-spacing:.09em; text-transform:uppercase; color:var(--ink-3)}
+.tally .t-over b{color:var(--red)} .tally .t-soon b{color:var(--amber)} .tally .t-ok b{color:var(--green)}
+
+/* ---------- buttons ---------- */
+button{font:inherit; color:inherit}
+.btn{
+  font-family:var(--f-disp); font-weight:600; font-size:14px; letter-spacing:.05em;
+  text-transform:uppercase; padding:7px 13px 6px; border-radius:3px;
+  border:1px solid var(--rule-2); background:var(--panel); cursor:pointer;
+  transition:background .12s, border-color .12s, color .12s;
+}
+.btn:hover{background:var(--panel-2); border-color:var(--rule-3)}
+.btn--primary{background:var(--marker); border-color:var(--marker); color:#fff}
+:root[data-theme="dark"] .btn--primary{color:#0D1014}
+.btn--primary:hover{background:var(--marker-2); border-color:var(--marker-2)}
+.btn--ghost{border-color:transparent; background:transparent; color:var(--ink-2)}
+.btn--ghost:hover{background:var(--panel-2); color:var(--ink)}
+.btn--sm{font-size:12px; padding:4px 9px 3px}
+.btn--danger{color:var(--red); border-color:var(--red-line)}
+.btn--danger:hover{background:var(--red-soft)}
+/* Action buttons stay neutral — green is reserved for status, not controls. */
+.btn--go, .btn--wait{background:var(--panel-2); border-color:var(--rule-2); color:var(--ink-2)}
+.btn--go{font-weight:700; color:var(--ink); border-color:var(--rule-3)}
+.btn--go:hover, .btn--wait:hover{background:var(--rule); border-color:var(--rule-3); color:var(--ink)}
+.btn--more{font-family:var(--f-mono); letter-spacing:0; padding:4px 8px 5px; line-height:1}
+.t-acts{display:flex; gap:6px; flex-wrap:wrap}
+@media (max-width:620px){ .t-acts .wide{display:none} }
+:where(a,button,input,select,textarea,summary):focus-visible{
+  outline:2px solid var(--marker); outline-offset:2px; border-radius:3px;
+}
+
+/* ---------- due board ---------- */
+.due{
+  margin:18px 0 26px; background:var(--panel); border:1px solid var(--rule-2);
+  border-radius:4px; box-shadow:var(--shadow); overflow:hidden;
+}
+.due-hd{
+  display:flex; align-items:baseline; gap:10px; padding:9px 14px 8px;
+  border-bottom:1px solid var(--rule); background:var(--panel-2);
+}
+.due-hd h2{
+  font-family:var(--f-disp); font-weight:700; font-size:16px; letter-spacing:.09em;
+  text-transform:uppercase; margin:0;
+}
+.due-hd .note{font-family:var(--f-mono); font-size:10px; letter-spacing:.06em; color:var(--ink-3); text-transform:uppercase}
+#horizonBtn{margin-left:auto; flex-shrink:0}
+.due-row{
+  display:grid; grid-template-columns:8px 1fr auto auto; align-items:center;
+  gap:0 12px; border-bottom:1px solid var(--rule);
+}
+.due-row:last-child{border-bottom:0}
+.due-row:hover{background:var(--panel-2)}
+.due-row .stripe{align-self:stretch; min-height:46px}
+.due-open{
+  background:none; border:0; padding:0; text-align:left; cursor:pointer;
+  color:inherit; min-width:0; display:block; width:100%;
+}
+.due-open[disabled]{cursor:default}
+.due-row .t-acts{padding-right:14px}
+@media (max-width:620px){
+  .due-row{grid-template-columns:6px 1fr auto; row-gap:0}
+  .due-row .t-acts{grid-column:2 / -1; padding:0 14px 9px}
+}
+.due-row.s-overdue .stripe{background:var(--red)}
+.due-row.s-soon .stripe{background:var(--amber)}
+.due-row.s-ok .stripe{background:var(--green-line)}
+.due-row.s-none .stripe, .due-row.s-stored .stripe{background:var(--rule-2)}
+.due-row[disabled]{cursor:default; color:var(--ink-3)}
+.due-row[disabled]:hover{background:none}
+.due-row[disabled] .what b{font-weight:500; font-style:italic; color:var(--ink-3)}
+.due-row .what{padding:8px 0; min-width:0}
+.due-row .what b{font-weight:600; display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.due-row .what span{
+  font-family:var(--f-mono); font-size:10.5px; letter-spacing:.05em;
+  text-transform:uppercase; color:var(--ink-3);
+}
+.due-row .amt{
+  font-family:var(--f-mono); font-size:12.5px; font-weight:500; text-align:right;
+  padding:8px 0; white-space:nowrap;
+}
+.due-row.s-overdue .amt{color:var(--red)} .due-row.s-soon .amt{color:var(--amber)}
+.due-row .go{padding-right:14px; color:var(--ink-3); font-size:15px}
+.due-empty{padding:16px 14px; color:var(--ink-2); font-size:14px}
+.due-empty b{color:var(--green)}
+
+/* ---------- asset panels ---------- */
+.grp{
+  font-family:var(--f-disp); font-weight:700; font-size:15px; letter-spacing:.16em;
+  text-transform:uppercase; color:var(--ink-3); margin:30px 0 11px;
+  display:flex; align-items:center; gap:12px;
+}
+.grp:first-child{margin-top:0}
+.grp::after{content:""; flex:1; height:1px; background:var(--rule-2)}
+.grp .n{font-size:11px; letter-spacing:.08em; color:var(--rule-3)}
+.grid{display:grid; gap:18px; grid-template-columns:1fr}
+@media (min-width:860px){.grid{grid-template-columns:1fr 1fr}}
+.panel{
+  background:var(--panel); border:1px solid var(--rule-2); border-radius:4px;
+  box-shadow:var(--shadow); display:flex; flex-direction:column; overflow:hidden;
+}
+.panel.is-stored{opacity:.82}
+.p-hd{padding:12px 14px 10px; border-bottom:2px solid var(--ink); display:flex; gap:12px; align-items:flex-start}
+.p-hd .name{min-width:0; flex:1}
+.p-hd h3{
+  font-family:var(--f-disp); font-weight:700; font-size:22px; line-height:1.02;
+  letter-spacing:.02em; text-transform:uppercase; margin:0; text-wrap:balance;
+}
+.p-hd .kind{
+  font-family:var(--f-mono); font-size:10px; letter-spacing:.09em; text-transform:uppercase;
+  color:var(--ink-3); margin-top:3px; display:flex; gap:7px; align-items:center; flex-wrap:wrap;
+}
+.stored-tag{
+  color:var(--ink-2); background:var(--panel-2); border:1px solid var(--rule-2);
+  border-radius:2px; padding:1px 5px; letter-spacing:.08em;
+}
+.odo{text-align:right; flex-shrink:0}
+.odo button{
+  font-family:var(--f-mono); font-size:22px; font-weight:600; letter-spacing:-.01em;
+  font-variant-numeric:tabular-nums; color:var(--marker); background:none;
+  border:0; border-bottom:1px dashed var(--rule-2); padding:0 0 1px; cursor:pointer; line-height:1.1;
+}
+.odo button:hover{border-bottom-color:var(--marker); background:var(--marker-soft)}
+.odo .unit{font-size:13px; font-weight:500; color:var(--ink-3); margin-left:2px}
+.odo .asof{font-family:var(--f-mono); font-size:9.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3); margin-top:2px}
+
+.specs{
+  padding:9px 14px 10px; background:var(--inset); border-bottom:1px solid var(--rule);
+  display:flex; flex-wrap:wrap; gap:3px 20px;
+}
+.spec{display:flex; gap:7px; font-family:var(--f-mono); font-size:11.5px; line-height:1.55; min-width:0}
+.spec dt{color:var(--ink-3); letter-spacing:.05em; text-transform:uppercase; white-space:nowrap}
+.spec dd{margin:0; color:var(--ink-2); font-weight:500}
+.spec--wide{flex-basis:100%}
+
+.tasks{list-style:none; margin:0; padding:0; flex:1}
+.task{
+  display:grid; grid-template-columns:1fr auto; gap:2px 12px; align-items:center;
+  padding:8px 14px; border-bottom:1px solid var(--rule);
+}
+.task:last-child{border-bottom:0}
+.task:hover{background:var(--panel-2)}
+/* Every row carries its own state on its left edge, so the chip can live in the header. */
+.task{box-shadow:inset 3px 0 0 var(--rule-2)}
+.task.s-overdue{box-shadow:inset 3px 0 0 var(--red)}
+.task.s-soon{box-shadow:inset 3px 0 0 var(--amber)}
+.task.s-ok{box-shadow:inset 3px 0 0 var(--green-line)}
+.task.s-snoozed{box-shadow:inset 3px 0 0 var(--marker)}
+.task.is-next{background:var(--inset)}
+.p-title{display:flex; align-items:baseline; gap:9px; flex-wrap:wrap}
+.p-title h3{flex:0 1 auto}
+/* Ledger rows — the whiteboard's own idiom: name on the left, when it was done on the right. */
+.rec-hd{
+  font-family:var(--f-mono); font-size:9px; letter-spacing:.13em; text-transform:uppercase;
+  color:var(--rule-3); padding:9px 14px 3px; border-bottom:1px solid var(--rule);
+  background:var(--inset);
+}
+.task--rec{padding-top:5px; padding-bottom:5px; box-shadow:inset 3px 0 0 var(--rule-2)}
+.task--rec .t-name{font-weight:500}
+.t-trail{color:var(--rule-3); letter-spacing:.06em}
+.t-rec{
+  font-family:var(--f-mono); font-size:12px; font-variant-numeric:tabular-nums;
+  color:var(--ink-2); text-align:right; white-space:nowrap;
+}
+.t-meta .pair{color:var(--marker)}
+.next-tag{
+  font-family:var(--f-mono); font-size:9px; font-weight:600; letter-spacing:.11em;
+  text-transform:uppercase; color:var(--marker); background:var(--marker-soft);
+  border-radius:2px; padding:2px 5px 1px; margin-right:7px; vertical-align:1px;
+}
+.t-main{min-width:0; grid-column:1}
+.t-name{
+  background:none; border:0; padding:0; cursor:pointer; font-weight:600; font-size:14.5px;
+  text-align:left; color:var(--ink); display:block; max-width:100%; line-height:1.3;
+}
+.t-name:hover{color:var(--marker); text-decoration:underline; text-underline-offset:2px}
+.t-meta{
+  font-family:var(--f-mono); font-size:10.5px; letter-spacing:.04em; color:var(--ink-3);
+  line-height:1.5; overflow-wrap:anywhere;
+}
+.t-right{grid-column:2; display:flex; align-items:center; gap:9px; justify-self:end}
+.chip{
+  font-family:var(--f-mono); font-size:10px; font-weight:600; letter-spacing:.08em;
+  text-transform:uppercase; padding:2px 7px 1px; border-radius:2px; border:1px solid; white-space:nowrap;
+}
+.chip.s-overdue{color:var(--red); background:var(--red-soft); border-color:var(--red-line)}
+.chip.s-soon{color:var(--amber); background:var(--amber-soft); border-color:var(--amber-line)}
+.chip.s-ok{color:var(--green); background:var(--green-soft); border-color:var(--green-line)}
+.chip.s-none,.chip.s-stored{color:var(--ink-3); background:var(--panel-2); border-color:var(--rule-2)}
+.chip.s-snoozed{color:var(--marker); background:var(--marker-soft); border-color:var(--marker)}
+.due-row.s-snoozed .stripe{background:var(--marker)}
+.due-row.s-snoozed .amt, .task.s-snoozed .t-amt{color:var(--marker)}
+.t-amt{font-family:var(--f-mono); font-size:11.5px; font-variant-numeric:tabular-nums; color:var(--ink-2); min-width:78px; text-align:right}
+.task.s-overdue .t-amt{color:var(--red); font-weight:500}
+.task.s-soon .t-amt{color:var(--amber); font-weight:500}
+.p-ft{padding:8px 14px 10px; display:flex; gap:8px; flex-wrap:wrap; border-top:1px solid var(--rule); background:var(--inset)}
+.p-empty{padding:12px 14px; color:var(--ink-3); font-size:13.5px; font-style:italic}
+
+@media (max-width:460px){
+  .task{grid-template-columns:1fr}
+  .t-right{grid-column:1; justify-self:start; margin-top:3px}
+  .t-amt{min-width:0; text-align:left}
+}
+
+/* ---------- dialogs ---------- */
+dialog{
+  border:1px solid var(--rule-2); border-radius:5px; background:var(--panel); color:var(--ink);
+  padding:0; width:min(480px, calc(100vw - 28px)); box-shadow:0 20px 60px -20px rgba(0,0,0,.5);
+}
+dialog::backdrop{background:rgba(12,15,12,.45)}
+.d-hd{padding:13px 16px 11px; border-bottom:2px solid var(--ink)}
+.d-hd h4{font-family:var(--f-disp); font-weight:700; font-size:20px; letter-spacing:.03em; text-transform:uppercase; margin:0}
+.d-hd p{margin:2px 0 0; font-family:var(--f-mono); font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3)}
+.d-body{padding:14px 16px; display:grid; gap:12px; max-height:min(62vh,520px); overflow-y:auto}
+.d-ft{padding:11px 16px 13px; border-top:1px solid var(--rule); display:flex; gap:8px; background:var(--inset)}
+.d-ft .spacer{margin-left:auto}
+.field{display:grid; gap:4px}
+.field label, .lbl{
+  font-family:var(--f-mono); font-size:10px; letter-spacing:.09em; text-transform:uppercase; color:var(--ink-3);
+}
+.field input, .field textarea, .field select{
+  font-family:var(--f-body); font-size:15px; color:var(--ink); background:var(--inset);
+  border:1px solid var(--rule-2); border-radius:3px; padding:7px 9px; width:100%;
+}
+.field input[type="number"], .field input[type="date"]{font-family:var(--f-mono); font-variant-numeric:tabular-nums}
+.field textarea{resize:vertical; min-height:62px; line-height:1.4}
+.field .hint{font-size:12px; color:var(--ink-3); line-height:1.35}
+.row2{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+.check{display:flex; gap:8px; align-items:center; font-size:14px}
+.check input{width:auto; accent-color:var(--marker)}
+.hist{list-style:none; margin:0; padding:0; border-top:1px solid var(--rule)}
+.hist li{
+  display:grid; grid-template-columns:auto 1fr auto; gap:10px; align-items:baseline;
+  padding:6px 0; border-bottom:1px solid var(--rule); font-size:13.5px;
+}
+.hist .d{font-family:var(--f-mono); font-size:11.5px; color:var(--ink-2); font-variant-numeric:tabular-nums}
+.hist .r{font-family:var(--f-mono); font-size:11.5px; color:var(--ink-3); font-variant-numeric:tabular-nums; text-align:right}
+.hist .n{color:var(--ink-2); min-width:0; overflow-wrap:anywhere}
+.hist-empty{font-size:13.5px; color:var(--ink-3); font-style:italic; padding:8px 0}
+
+/* ---------- misc ---------- */
+.banner{
+  margin:0 0 16px; padding:9px 12px; border-radius:3px; font-size:13.5px;
+  background:var(--amber-soft); border:1px solid var(--amber-line); color:var(--amber);
+}
+.loading{padding:44px 0; text-align:center; font-family:var(--f-mono); font-size:11px;
+  letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3)}
+.colophon{
+  margin-top:30px; padding-top:12px; border-top:1px solid var(--rule);
+  font-family:var(--f-mono); font-size:10.5px; letter-spacing:.05em; color:var(--ink-3); line-height:1.7;
+}
+/* ---------- tabs ---------- */
+.tabs{display:flex; gap:2px; margin:16px 0 0; border-bottom:1px solid var(--rule-2)}
+.tab{
+  font-family:var(--f-disp); font-weight:700; font-size:15px; letter-spacing:.09em;
+  text-transform:uppercase; padding:8px 16px 7px; border:1px solid transparent;
+  border-bottom:0; background:none; color:var(--ink-3); cursor:pointer;
+  border-radius:3px 3px 0 0; margin-bottom:-1px;
+}
+.tab:hover{color:var(--ink)}
+.tab[aria-selected="true"]{
+  color:var(--ink); background:var(--panel); border-color:var(--rule-2);
+  border-bottom:1px solid var(--panel);
+}
+.tab .n{font-family:var(--f-mono); font-size:10px; color:var(--ink-3); margin-left:6px}
+
+/* ---------- inventory ---------- */
+.inv-bar{display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin:18px 0 14px}
+.inv-bar input[type="search"]{
+  flex:1 1 240px; min-width:0; font-family:var(--f-body); font-size:15px;
+  padding:8px 11px; border:1px solid var(--rule-2); border-radius:3px;
+  background:var(--panel); color:var(--ink);
+}
+.inv-bar select{
+  font-family:var(--f-body); font-size:14px; padding:7px 9px; border-radius:3px;
+  border:1px solid var(--rule-2); background:var(--panel); color:var(--ink);
+}
+.inv-count{font-family:var(--f-mono); font-size:10.5px; letter-spacing:.07em;
+  text-transform:uppercase; color:var(--ink-3)}
+
+/* the house */
+.house{margin:0 0 26px}
+.roofwrap{position:relative}
+.roof{display:block; width:100%; height:56px}
+/* The nameplate sits in the gable, where a house carries its name. */
+.gable{
+  position:absolute; left:50%; bottom:5px; transform:translateX(-50%);
+  font-family:var(--f-disp); font-weight:700; font-size:14px;
+  letter-spacing:.34em; text-indent:.34em; text-transform:uppercase;
+  color:var(--ink-2); white-space:nowrap; pointer-events:none;
+}
+.floors{
+  border:2px solid var(--ink); border-top:0; background:var(--panel);
+  box-shadow:var(--shadow); overflow:hidden;
+}
+.floor{display:grid; gap:0; border-bottom:1px solid var(--rule-2)}
+.floor:last-child{border-bottom:0}
+@media (min-width:700px){
+  .floor--2{grid-template-columns:1fr 1fr}
+  .floor--3{grid-template-columns:1fr 1fr 1fr}
+}
+.room{padding:10px 12px 12px; border-right:1px solid var(--rule); min-height:82px}
+.room:last-child{border-right:0}
+.room h4{
+  font-family:var(--f-mono); font-size:9.5px; letter-spacing:.13em; margin:0 0 7px;
+  text-transform:uppercase; color:var(--ink-3);
+}
+.room h4 b{color:var(--rule-3); font-weight:500; margin-left:5px}
+.room--out{background:var(--inset)}
+/* the staging bay under the house — not part of it, so it reads as a yard */
+.room--none{
+  background:repeating-linear-gradient(45deg, var(--inset), var(--inset) 9px,
+    var(--panel-2) 9px, var(--panel-2) 18px);
+  border-top:2px dashed var(--rule-3);
+}
+.room--none h4{color:var(--amber)}
+.things{display:flex; flex-wrap:wrap; gap:5px}
+.thing{
+  display:flex; align-items:center; gap:5px; padding:4px 8px 4px 6px;
+  border:1px solid var(--rule-2); border-radius:3px; background:var(--panel-2);
+  cursor:pointer; max-width:100%; color:var(--ink); font-size:12.5px; text-align:left;
+}
+.thing:hover{border-color:var(--marker); background:var(--marker-soft)}
+.thing svg{width:16px; height:16px; flex:0 0 16px; stroke:var(--ink-2); fill:none;
+  stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round}
+.thing:hover svg{stroke:var(--marker)}
+.thing span{overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.thing.has-recall{border-color:var(--red); background:var(--red-soft)}
+.thing.has-recall svg{stroke:var(--red)}
+
+/* item rows */
+.inv-grp{
+  font-family:var(--f-disp); font-weight:700; font-size:13px; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--ink-3); margin:22px 0 6px;
+  display:flex; align-items:center; gap:10px;
+}
+.inv-grp::after{content:""; flex:1; height:1px; background:var(--rule-2)}
+.grp-t{
+  display:flex; align-items:center; gap:8px; background:none; border:0; padding:2px 0;
+  font:inherit; color:inherit; cursor:pointer; letter-spacing:inherit;
+}
+.grp-t:hover{color:var(--ink)}
+.grp-t .cx{font-size:11px; color:var(--rule-3)}
+.grp-t .gn{
+  font-family:var(--f-mono); font-size:10px; letter-spacing:.04em; color:var(--rule-3);
+  background:var(--panel-2); border:1px solid var(--rule-2); border-radius:2px; padding:1px 5px;
+}
+#grpAll{margin-left:8px}
+
+/* drag and drop */
+.thing{cursor:grab; touch-action:none}
+.thing.dragging{opacity:.35}
+.thing.ghost{
+  position:fixed; z-index:200; pointer-events:none; opacity:.95; margin:0;
+  box-shadow:0 6px 18px -6px rgba(0,0,0,.45); border-color:var(--marker);
+}
+.room.over{
+  background:var(--marker-soft);
+  box-shadow:inset 0 0 0 2px var(--marker);
+}
+.thing.over{
+  background:var(--marker-soft); border-color:var(--marker);
+  box-shadow:0 0 0 3px var(--marker-soft);
+}
+.thing--bin{border-style:dashed}
+.inv-list{list-style:none; margin:0; padding:0; background:var(--panel);
+  border:1px solid var(--rule-2); border-radius:4px; box-shadow:var(--shadow)}
+.inv-row{
+  display:grid; grid-template-columns:22px 1fr auto; gap:0 11px; align-items:center;
+  padding:7px 12px; border-bottom:1px solid var(--rule); cursor:pointer;
+  width:100%; text-align:left; background:none; border-left:0; border-right:0; border-top:0;
+  color:var(--ink);
+}
+.inv-row:last-child{border-bottom:0}
+.inv-row:hover{background:var(--panel-2)}
+.inv-row svg{width:17px; height:17px; stroke:var(--ink-3); fill:none;
+  stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round}
+.inv-row .nm{min-width:0}
+.inv-row .nm b{font-weight:600; font-size:14.5px; display:block}
+.inv-row .nm span{font-family:var(--f-mono); font-size:10.5px; color:var(--ink-3);
+  overflow-wrap:anywhere}
+.inv-row .rm{text-transform:uppercase; letter-spacing:.09em; color:var(--ink-2); font-weight:500}
+.inv-row .rm--none{color:var(--amber); font-weight:600}
+.inv-row .rt{text-align:right; font-family:var(--f-mono); font-size:11px;
+  color:var(--ink-3); white-space:nowrap; font-variant-numeric:tabular-nums}
+.wtag{
+  font-family:var(--f-mono); font-size:9px; font-weight:600; letter-spacing:.08em;
+  text-transform:uppercase; padding:2px 6px 1px; border-radius:2px; border:1px solid;
+}
+.wtag.w-live{color:var(--green); background:var(--green-soft); border-color:var(--green-line)}
+.wtag.w-soon{color:var(--amber); background:var(--amber-soft); border-color:var(--amber-line)}
+.wtag.w-dead{color:var(--ink-3); background:var(--panel-2); border-color:var(--rule-2)}
+.wtag.w-life{color:var(--marker); background:var(--marker-soft); border-color:var(--marker)}
+.rtag{
+  font-family:var(--f-mono); font-size:9px; font-weight:700; letter-spacing:.09em;
+  text-transform:uppercase; padding:2px 6px 1px; border-radius:2px; margin-right:6px;
+  border:1px solid transparent;
+}
+.rtag.r-action{color:#fff; background:var(--red); border-color:var(--red)}
+.rtag.r-check{color:var(--amber); background:var(--amber-soft); border-color:var(--amber-line)}
+.rtag.r-cleared{color:var(--green); background:var(--green-soft); border-color:var(--green-line)}
+.rtag.r-sold{color:var(--ink-3); background:var(--panel-2); border-color:var(--rule-2)}
+
+/* spotlight */
+.spots{display:flex; flex-wrap:wrap; gap:6px; margin:0 0 14px}
+.spot{
+  font-family:var(--f-disp); font-weight:600; font-size:13px; letter-spacing:.08em;
+  text-transform:uppercase; padding:5px 11px 4px; border-radius:3px; cursor:pointer;
+  border:1px solid var(--rule-2); background:var(--panel); color:var(--ink-2);
+}
+.spot:hover{border-color:var(--rule-3); color:var(--ink)}
+.spot.on{background:var(--marker); border-color:var(--marker); color:var(--panel)}
+.spot--clear{border-style:dashed; color:var(--ink-3)}
+.room h4 .hit{
+  font-style:normal; font-size:9px; color:var(--marker); margin-left:7px; letter-spacing:.08em;
+}
+.thing.dim{opacity:.32}
+.thing.lit{border-color:var(--marker); box-shadow:0 0 0 2px var(--marker-soft)}
+
+/* collapsed boxes */
+.thing--box{font-weight:600; border-color:var(--rule-3); background:var(--panel)}
+.thing--box .cnt{
+  font-style:normal; font-family:var(--f-mono); font-size:9.5px; color:var(--ink-3);
+  background:var(--panel-2); border:1px solid var(--rule-2); border-radius:2px; padding:1px 4px;
+}
+.thing--box .caret{font-style:normal; color:var(--ink-3); font-size:10px}
+.exploded{
+  flex-basis:100%; display:flex; flex-wrap:wrap; gap:4px; margin:2px 0 4px 14px;
+  padding-left:10px; border-left:2px solid var(--rule-2);
+}
+.thing--part{font-size:11.5px; padding:2px 7px 2px 5px; background:var(--inset)}
+.thing--part svg{width:13px; height:13px; flex-basis:13px}
+.box-w{
+  flex-basis:100%; font-family:var(--f-mono); font-size:9.5px; letter-spacing:.06em;
+  text-transform:uppercase; color:var(--ink-3); padding-top:2px;
+}
+
+.recall-banner{
+  margin:0 0 18px; border:1px solid var(--red); border-left-width:4px; border-radius:4px;
+  background:var(--red-soft); padding:11px 14px;
+}
+.recall-banner h3{font-family:var(--f-disp); font-weight:700; font-size:17px; margin:0 0 3px;
+  letter-spacing:.03em; text-transform:uppercase; color:var(--red)}
+.recall-banner p{margin:0 0 6px; font-size:14px; line-height:1.45}
+.recall-banner .todo{font-family:var(--f-mono); font-size:11.5px; color:var(--ink-2)}
+
+.det dl{margin:0; display:grid; grid-template-columns:auto 1fr; gap:4px 14px; font-size:14px}
+.det dt{font-family:var(--f-mono); font-size:10px; letter-spacing:.09em;
+  text-transform:uppercase; color:var(--ink-3); padding-top:3px}
+.det dd{margin:0; overflow-wrap:anywhere}
+.det .ser{font-family:var(--f-mono); font-size:13px}
+.det a{color:var(--marker); overflow-wrap:anywhere}
+.shots{display:flex; flex-wrap:wrap; gap:7px; margin:2px 0 4px}
+.shot{position:relative; width:76px; height:76px; border:1px solid var(--rule-2);
+  border-radius:3px; overflow:hidden; background:var(--panel-2)}
+.shot img{width:100%; height:100%; object-fit:cover; display:block; cursor:zoom-in}
+.shot button{
+  position:absolute; top:2px; right:2px; width:19px; height:19px; padding:0; line-height:1;
+  border-radius:2px; border:1px solid var(--rule-2); background:var(--panel);
+  color:var(--red); font-size:13px; cursor:pointer;
+}
+.shots-empty{font-size:13px; color:var(--ink-3); font-style:italic}
+.ai-note{font-family:var(--f-mono); font-size:11.5px; line-height:1.5; color:var(--ink-2);
+  background:var(--marker-soft); border:1px solid var(--rule-2); border-left:3px solid var(--marker);
+  border-radius:3px; padding:6px 9px}
+.ai-note.is-err{border-left-color:var(--amber); background:var(--amber-soft)}
+.field input.ai-filled, .field select.ai-filled{border-color:var(--marker); box-shadow:0 0 0 2px var(--marker-soft)}
+.track-more{margin:18px 0 0}
+.chore-list li{grid-template-columns:auto 1fr auto}
+.chore-list .cm{font-family:var(--f-mono); font-size:10.5px; color:var(--ink-3)}
+.chore-odo{margin:0 0 4px; font-family:var(--f-mono); font-size:12px; color:var(--marker)}
+@media (prefers-reduced-motion:no-preference){
+  .panel.flash{animation:flash 1.6s ease-out}
+  @keyframes flash{0%,30%{box-shadow:0 0 0 3px var(--marker)} 100%{box-shadow:var(--shadow)}}
+}
+
+.lvl{
+  font-family:var(--f-mono); font-size:8.5px; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--rule-3); padding:3px 12px 0; background:var(--inset);
+  border-bottom:1px solid var(--rule);
+}
+/* ---------- GitHub sync panel ---------- */
+.sync-btn{display:inline-flex; align-items:center; gap:7px}
+.sync-dot{width:8px; height:8px; border-radius:50%; background:var(--rule-3); flex:none}
+.sync-btn[data-state="saved"] .sync-dot{background:var(--green)}
+.sync-btn[data-state="saving"] .sync-dot, .sync-btn[data-state="loading"] .sync-dot{background:var(--amber)}
+.sync-btn[data-state="error"] .sync-dot{background:var(--red)}
+.sync-btn[data-state="readonly"] .sync-dot{background:var(--marker)}
+.sync-sec{border-top:1px solid var(--rule); padding-top:11px; display:grid; gap:7px}
+.sync-sec:first-child{border-top:0; padding-top:0}
+.sync-sec h5{font-family:var(--f-disp); font-weight:700; font-size:14px; letter-spacing:.07em;
+  text-transform:uppercase; margin:0}
+.sync-sec p, .sync-sec ol{margin:0; font-size:13.5px; line-height:1.45; color:var(--ink-2)}
+.sync-sec ol{padding-left:20px}
+.sync-sec a{color:var(--marker)}
+.sync-msg{font-size:13.5px; padding:7px 9px; border-radius:3px; background:var(--panel-2);
+  border:1px solid var(--rule-2); color:var(--ink-2)}
+.sync-msg.is-bad{background:var(--red-soft); border-color:var(--red-line); color:var(--red)}
+.sync-msg.is-good{background:var(--green-soft); border-color:var(--green-line); color:var(--green)}
+.xwrap{position:relative; display:flex}
+.xwrap input{flex:1; padding-right:34px}
+.xbtn{position:absolute; right:4px; top:50%; transform:translateY(-50%); width:26px; height:26px;
+  border:0; background:none; color:var(--ink-3); cursor:pointer; font-size:17px; line-height:1; border-radius:3px}
+.xbtn:hover{color:var(--ink); background:var(--panel-2)}
+.sync-row{display:flex; gap:8px; flex-wrap:wrap; align-items:center}
+.dismissed-note{font-family:var(--f-mono); font-size:10.5px; color:var(--ink-3);
+  margin:0 0 14px; display:flex; gap:10px; align-items:center}
+
+/* ---------- recalls tab ---------- */
+.rc-lead{margin:18px 0 4px; font-size:14px; color:var(--ink-2); max-width:68ch}
+.rc-card{
+  background:var(--panel); border:1px solid var(--rule-2); border-left:4px solid var(--amber);
+  border-radius:4px; padding:11px 14px 12px; margin:0 0 10px; box-shadow:var(--shadow);
+}
+.rc-card.is-action{border-left-color:var(--red)}
+.rc-card.is-hushed{border-left-color:var(--rule-3); background:var(--panel-2); box-shadow:none}
+.rc-card h3{
+  font-family:var(--f-disp); font-weight:700; font-size:17px; letter-spacing:.03em;
+  text-transform:uppercase; margin:0 0 2px; color:var(--amber);
+}
+.rc-card.is-action h3{color:var(--red)}
+.rc-card.is-hushed h3{color:var(--ink-2)}
+.rc-card .who{
+  font-family:var(--f-mono); font-size:10.5px; letter-spacing:.05em; text-transform:uppercase;
+  color:var(--ink-3); margin:0 0 7px; overflow-wrap:anywhere;
+}
+.rc-card .who b{color:var(--ink); font-weight:600}
+.rc-card p{margin:0 0 6px; font-size:14px; line-height:1.45}
+.rc-card .todo{font-family:var(--f-mono); font-size:11.5px; color:var(--ink-2)}
+.rc-card a{color:var(--marker); overflow-wrap:anywhere}
+.rc-acts{display:flex; gap:6px; flex-wrap:wrap; margin-top:9px}
+.rc-none{padding:14px; color:var(--ink-2); font-size:14px; background:var(--panel);
+  border:1px solid var(--rule-2); border-radius:4px}
+.rc-none b{color:var(--green)}
+.rc-row{
+  display:grid; grid-template-columns:1fr auto; gap:2px 12px; align-items:center;
+  padding:7px 12px; border-bottom:1px solid var(--rule);
+}
+.rc-row:last-child{border-bottom:0}
+.rc-row .nm{min-width:0}
+.rc-row .nm b{font-weight:600; font-size:14.5px; display:block}
+.rc-row .nm span{font-family:var(--f-mono); font-size:10.5px; color:var(--ink-3); overflow-wrap:anywhere}
+.rc-row .rt{display:flex; gap:8px; align-items:center; justify-content:flex-end; flex-wrap:wrap;
+  font-family:var(--f-mono); font-size:11px; color:var(--ink-3); white-space:nowrap}
+.rc-run{font-family:var(--f-mono); font-size:11px; color:var(--marker); letter-spacing:.04em}
+
+/* ---------- print sheet ---------- */
+/* Deliberately single-theme black on white: this one is for paper. */
+#printsheet{display:none}
+@media print{
+  .wrap{display:none !important}
+  body{background:#fff !important}
+  #printsheet{display:block; background:#fff; color:#000;
+    font-family:"Barlow", system-ui, sans-serif; font-variant-numeric:tabular-nums}
+  @page{size:letter portrait; margin:0.5in}
+}
+.ps-page{page-break-after:always; break-after:page}
+.ps-page:last-child{page-break-after:auto; break-after:auto}
+.ps-h{font-family:"Barlow Condensed","Arial Narrow",sans-serif; font-size:25px; font-weight:700;
+  text-transform:uppercase; letter-spacing:.03em; margin:0; padding-bottom:3px; border-bottom:2px solid #000}
+.ps-sub{font-family:"Barlow", system-ui, sans-serif; font-size:8.5px; letter-spacing:.1em;
+  text-transform:uppercase; color:#555; margin:4px 0 13px}
+table.ps-grid{width:100%; border-collapse:collapse; table-layout:fixed}
+.ps-grid th,.ps-grid td{border:1px solid #9a9a9a; padding:4px 7px; vertical-align:top; font-size:11px}
+.ps-grid th{font-family:"Barlow Condensed","Arial Narrow",sans-serif; font-size:15px; text-align:left;
+  text-transform:uppercase; letter-spacing:.03em; border-bottom:2px solid #000}
+.ps-cat{width:21%; text-align:center; vertical-align:middle; background:#efefef; font-weight:600;
+  font-family:"Barlow", system-ui, sans-serif; font-size:8.5px; letter-spacing:.08em; text-transform:uppercase}
+.ps-val{font-family:"Barlow", system-ui, sans-serif; font-size:11px; font-variant-numeric:tabular-nums}
+.ps-x{font-size:9px; color:#555; line-height:1.35; margin-top:1px}
+.ps-odo{font-family:"Barlow", system-ui, sans-serif; font-size:15px; font-weight:600}
+.ps-spec{font-size:9px; color:#444; line-height:1.4}
+.ps-foot{margin-top:9px; padding-top:5px; border-top:1px solid #9a9a9a; font-size:9.5px; color:#333}
+.ps-cols{column-count:2; column-gap:20px}
+.ps-grp{font-family:"Barlow Condensed","Arial Narrow",sans-serif; font-size:12px; text-transform:uppercase;
+  letter-spacing:.12em; color:#555; margin:0 0 4px; padding-bottom:2px; border-bottom:1px solid #9a9a9a;
+  break-after:avoid}
+.ps-item{margin:0 0 10px; break-inside:avoid}
+.ps-item h4{font-family:"Barlow Condensed","Arial Narrow",sans-serif; font-size:14px; margin:0;
+  text-transform:uppercase; letter-spacing:.02em}
+ul.ps-tasks{list-style:none; margin:2px 0 0; padding:0}
+ul.ps-tasks li{display:flex; justify-content:space-between; gap:10px; font-size:10px;
+  padding:1.5px 0; border-bottom:1px dotted #c4c4c4}
+ul.ps-tasks .d{font-family:"Barlow", system-ui, sans-serif; white-space:nowrap; color:#333;
+  font-variant-numeric:tabular-nums}
+
+#toast{
+  position:fixed; left:50%; transform:translateX(-50%); bottom:calc(18px + env(safe-area-inset-bottom,0px));
+  background:var(--ink); color:var(--ground); font-family:var(--f-mono); font-size:12px;
+  padding:8px 14px; border-radius:3px; z-index:50; box-shadow:var(--shadow); max-width:calc(100vw - 32px);
+}
+@media (prefers-reduced-motion:no-preference){
+  #toast{animation:rise .18s ease-out}
+  @keyframes rise{from{opacity:0; transform:translate(-50%,8px)} to{opacity:1; transform:translate(-50%,0)}}
+}
+</style>
+
+<div class="wrap">
+  <header class="mast">
+    <div class="name">
+      <h1>Chore Factory</h1>
+      <p class="byline">by Ben Winchester, Rural Sociologist. November, 2026.</p>
+      <div class="sub" id="sub">Loading&hellip;</div>
+    </div>
+    <div class="mast-actions">
+      <button type="button" class="theme-toggle" id="theme-toggle"
+              aria-label="Switch to dark mode" title="Switch color theme">
+        <span class="glyph" id="theme-glyph" aria-hidden="true">&#9790;</span>
+      </button>
+      <button type="button" class="btn btn--sm sync-btn" id="syncBtn" data-state="loading"
+              title="Where your data is saved"><span class="sync-dot" aria-hidden="true"></span><span id="syncTxt">Loading</span></button>
+      <button class="btn btn--sm" id="printBtn" title="Page 1 vehicle log, page 2 everything else">Print / PDF</button>
+      <div class="tally" id="tally" hidden>
+        <div class="t-over"><b>0</b><span>Overdue</span></div>
+        <div class="t-soon"><b>0</b><span>Due soon</span></div>
+        <div class="t-ok"><b>0</b><span>OK</span></div>
+      </div>
+      <button class="btn" id="addAsset" hidden>+ Item</button>
+    </div>
+  </header>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" id="tabChores" role="tab" aria-selected="true">Chores</button>
+    <button class="tab" id="tabInv" role="tab" aria-selected="false">Inventory<span class="n" id="invN"></span></button>
+    <button class="tab" id="tabRec" role="tab" aria-selected="false">Recalls<span class="n" id="recN"></span></button>
+  </div>
+
+  <div id="banner"></div>
+  <div class="loading" id="loading">Reading the board&hellip;</div>
+
+  <div id="viewChores">
+    <div id="due"></div>
+    <div id="grid"></div>
+    <div class="track-more"><button class="btn btn--sm btn--ghost" id="addTracked" hidden>+ Track a vehicle or system</button></div>
+  </div>
+
+  <div id="viewInv" hidden>
+    <div id="recallTop"></div>
+    <div class="inv-bar">
+      <input type="search" id="invQ" placeholder="Search name, make, model, serial&hellip;" aria-label="Search inventory">
+      <select id="invRoom" aria-label="Filter by room"><option value="">All rooms</option></select>
+      <select id="invCat" aria-label="Filter by category"><option value="">All categories</option></select>
+      <select id="invW" aria-label="Filter by warranty">
+        <option value="">Any warranty</option>
+        <option value="live">Under warranty</option>
+        <option value="soon">Expiring within a year</option>
+        <option value="dead">Expired</option>
+        <option value="none">No warranty recorded</option>
+      </select>
+      <label class="check" style="font-size:13px"><input type="checkbox" id="invSold"> Show sold</label>
+      <span class="inv-count" id="invCount"></span>
+    </div>
+    <div class="spots" id="spots"></div>
+    <div id="house"></div>
+    <div id="invList"></div>
+  </div>
+
+  <div id="viewRec" hidden></div>
+
+  <datalist id="groupList"></datalist>
+
+  <p class="colophon">
+    Next up shows anything overdue or due in the next 14 days &mdash; Show all lists everything upcoming by date.<br>
+    Transcribed from the garage and filter boards. Everything saves to GitHub, encrypted; your link is the key that opens it.
+  </p>
+</div>
+
+<dialog id="dlgSync">
+  <form method="dialog">
+    <div class="d-hd"><h4>Saving to GitHub</h4><p>Encrypted in ruralben/chore-factory</p></div>
+    <div class="d-body">
+      <div class="sync-msg" id="syncMsg"></div>
+
+      <div class="sync-sec" id="syncKeySec" hidden>
+        <h5>Open your data</h5>
+        <p>This device doesn't have your Chore Factory link yet. Paste the full link, the one ending in <code>#k=&hellip;</code>.</p>
+        <div class="xwrap"><input type="text" id="syncKeyIn" autocomplete="off" spellcheck="false" aria-label="Chore Factory link">
+          <button type="button" class="xbtn" data-clear="syncKeyIn" aria-label="Clear">&times;</button></div>
+        <div class="sync-row"><button type="button" class="btn btn--sm btn--primary" id="syncKeyGo">Open</button></div>
+      </div>
+
+      <div class="sync-sec" id="syncTokSec">
+        <h5>Saving from this device</h5>
+        <div id="syncTokOn" hidden>
+          <p>This device can save. Its GitHub key stays in this browser only.</p>
+          <div class="sync-row" style="margin-top:7px"><button type="button" class="btn btn--sm btn--ghost" id="syncForget">Forget the GitHub key on this device</button></div>
+        </div>
+        <div id="syncTokOff">
+          <p>Viewing only. To save changes from this device, give it a GitHub key once:</p>
+          <ol>
+            <li>Open <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">GitHub's new fine-grained token page &#8599;</a>.</li>
+            <li>Name it "Chore Factory", and pick the longest expiration offered.</li>
+            <li>Under <b>Repository access</b>, choose <b>Only select repositories</b> and pick <b>chore-factory</b>.</li>
+            <li>Under <b>Permissions</b>, set <b>Contents</b> to <b>Read and write</b>. Nothing else.</li>
+            <li>Generate it, copy it, and paste it here.</li>
+          </ol>
+          <div class="xwrap"><input type="password" id="syncTokIn" autocomplete="off" spellcheck="false" aria-label="GitHub key">
+            <button type="button" class="xbtn" data-clear="syncTokIn" aria-label="Clear">&times;</button></div>
+          <div class="sync-row"><button type="button" class="btn btn--sm btn--primary" id="syncTokGo">Connect</button></div>
+        </div>
+      </div>
+
+      <div class="sync-sec" id="syncLinkSec">
+        <h5>Open on another device</h5>
+        <p>Your link carries the key that unlocks the data. Anyone who has it can read your inventory, so share it only with your own devices or family.</p>
+        <div class="sync-row"><button type="button" class="btn btn--sm" id="syncCopy">Copy my link</button></div>
+      </div>
+    </div>
+    <div class="d-ft">
+      <button type="button" class="btn btn--sm btn--ghost" id="syncRetry" hidden>Try saving again</button>
+      <span class="spacer"></span>
+      <button class="btn" value="cancel">Close</button>
+    </div>
+  </form>
+</dialog>
+
+<div id="printsheet" aria-hidden="true"></div>
+
+<dialog id="dlgLog">
+  <form method="dialog">
+    <div class="d-hd"><h4 id="logTitle">Log service</h4><p id="logSub"></p></div>
+    <div class="d-body">
+      <div class="row2">
+        <div class="field"><label for="logDate">Date</label><input type="date" id="logDate" required></div>
+        <div class="field" id="logReadWrap"><label for="logRead">Odometer</label><input type="number" id="logRead" step="1" min="0" inputmode="numeric"></div>
+      </div>
+      <div class="field"><label for="logNote">Note</label><input type="text" id="logNote" placeholder="Parts, shop, what you noticed"></div>
+      <p class="hint" id="logHint"></p>
+    </div>
+    <div class="d-ft">
+      <button class="btn" value="cancel" formnovalidate>Cancel</button>
+      <span class="spacer"></span>
+      <button class="btn btn--primary" id="logSave" value="save">Log it</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="dlgTask">
+  <form method="dialog">
+    <div class="d-hd"><h4 id="taskTitle">Task</h4><p id="taskSub"></p></div>
+    <div class="d-body">
+      <div class="field"><label for="tkName">Task</label><input type="text" id="tkName" required placeholder="Oil &amp; filter"></div>
+      <div class="row2">
+        <div class="field" id="tkMilesWrap">
+          <label for="tkMiles">Every &mdash; miles</label>
+          <input type="number" id="tkMiles" step="100" min="0" inputmode="numeric" placeholder="5000">
+        </div>
+        <div class="field">
+          <label for="tkEvery">Every &mdash; time</label>
+          <div style="display:flex; gap:6px">
+            <input type="number" id="tkEvery" step="1" min="0" inputmode="numeric" placeholder="6" style="flex:1">
+            <select id="tkUnit" style="width:auto"><option value="7">weeks</option><option value="30.44" selected>months</option><option value="365.25">years</option></select>
+          </div>
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field"><label for="tkDate">Last done</label><input type="date" id="tkDate"></div>
+        <div class="field" id="tkReadWrap"><label for="tkRead">At odometer</label><input type="number" id="tkRead" step="1" min="0" inputmode="numeric"></div>
+      </div>
+      <div class="field"><label for="tkNote">Reference note</label><input type="text" id="tkNote" placeholder="Part number, spec, procedure"></div>
+      <div class="field" id="tkSnoozeWrap">
+        <span class="lbl">Postponed</span>
+        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap">
+          <span id="tkSnoozeTxt" style="font-size:14px"></span>
+          <button type="button" class="btn btn--sm btn--ghost" id="tkSnoozeClear">Un-postpone</button>
+        </div>
+      </div>
+      <div>
+        <div class="lbl" style="margin-bottom:5px">History</div>
+        <ul class="hist" id="tkHist"></ul>
+      </div>
+    </div>
+    <div class="d-ft">
+      <button class="btn btn--danger btn--sm" id="tkDelete" type="button">Delete</button>
+      <span class="spacer"></span>
+      <button class="btn" value="cancel" formnovalidate>Cancel</button>
+      <button class="btn btn--primary" id="tkSave" value="save">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="dlgAsset">
+  <form method="dialog">
+    <div class="d-hd"><h4 id="asTitle">Item</h4><p>Vehicle, machine or system</p></div>
+    <div class="d-body">
+      <div class="field"><label for="asName">Name</label><input type="text" id="asName" required placeholder="2014 Toyota Sienna XLE"></div>
+      <div class="field">
+        <label for="asGroup">Area</label>
+        <input type="text" id="asGroup" list="groupList" placeholder="Home">
+        <span class="hint">Groups the panels &mdash; e.g. Home, Vehicles, Outdoor, Shop.</span>
+      </div>
+      <div class="row2">
+        <div class="field"><label for="asKind">Category</label><input type="text" id="asKind" placeholder="Vehicle"></div>
+        <div class="field">
+          <label for="asUnit">Meter</label>
+          <select id="asUnit"><option value="">none</option><option value="mi">miles</option><option value="hr">hours</option></select>
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field" id="asReadWrap"><label for="asRead">Current reading</label><input type="number" id="asRead" step="1" min="0" inputmode="numeric"></div>
+        <div class="field" id="asReadDateWrap"><label for="asReadDate">As of</label><input type="date" id="asReadDate"></div>
+      </div>
+      <div class="field">
+        <label for="asSpecs">Specs &amp; codes</label>
+        <textarea id="asSpecs" placeholder="Oil: 0W-20, 6.4 qt&#10;Drain plug: 14 mm"></textarea>
+        <span class="hint">One per line, as <code>Label: value</code>.</span>
+      </div>
+      <label class="check"><input type="checkbox" id="asStored"> Stored / out of season &mdash; stop counting down</label>
+    </div>
+    <div class="d-ft">
+      <button class="btn btn--danger btn--sm" id="asDelete" type="button">Delete</button>
+      <span class="spacer"></span>
+      <button class="btn" value="cancel" formnovalidate>Cancel</button>
+      <button class="btn btn--primary" id="asSave" value="save">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="dlgItemEdit">
+  <form method="dialog">
+    <div class="d-hd"><h4 id="ieTitle">Item</h4><p id="ieSub"></p></div>
+    <div class="d-body">
+      <div class="field" id="iePhotoWrap">
+        <span class="lbl">Photos &mdash; box, label, serial plate</span>
+        <div class="shots" id="iePhotos"></div>
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap">
+          <button type="button" class="btn btn--sm btn--primary" id="iePaste">Paste picture</button>
+          <button type="button" class="btn btn--sm" id="iePhotoAdd">Add photo</button>
+          <span class="hint" id="ieAiHint">A pasted label or serial plate fills in the fields below.</span>
+        </div>
+        <div class="ai-note" id="ieAi" hidden></div>
+        <input type="file" id="iePhotoFile" accept="image/*" multiple hidden>
+      </div>
+      <div class="field"><label for="ieName">Name</label><input type="text" id="ieName" required></div>
+      <div class="row2">
+        <div class="field"><label for="ieMake">Make</label><input type="text" id="ieMake"></div>
+        <div class="field"><label for="ieModel">Model #</label><input type="text" id="ieModel"></div>
+      </div>
+      <div class="field"><label for="ieModelName">Model</label><input type="text" id="ieModelName"></div>
+      <div class="row2">
+        <div class="field">
+          <label for="ieRoom">Room</label>
+          <select id="ieRoom"></select>
+          <input type="text" id="ieRoomNew" placeholder="New room name" hidden>
+        </div>
+        <div class="field"><label for="ieCat">Category</label><input type="text" id="ieCat"></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label for="ieBought">Purchased</label><input type="date" id="ieBought"></div>
+        <div class="field"><label for="ieWEnds">Warranty ends</label><input type="date" id="ieWEnds"></div>
+      </div>
+      <div class="field"><label for="ieWText">Warranty, as written</label><input type="text" id="ieWText"></div>
+      <div class="field"><label for="ieSerial">Serial #</label><input type="text" id="ieSerial"></div>
+      <div class="field"><label for="ieBoughtAt">Bought at</label><input type="text" id="ieBoughtAt"></div>
+      <div class="field"><label for="ieNotes">Notes</label><textarea id="ieNotes"></textarea></div>
+      <label class="check"><input type="checkbox" id="ieLife"> Lifetime warranty</label>
+      <label class="check" id="ieSoldWrap"><input type="checkbox" id="ieSold"> Sold or gone &mdash; hide from the house and list</label>
+      <div class="field">
+        <span class="lbl">Recalls</span>
+        <div class="det" id="ieRecall"></div>
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap">
+          <button type="button" class="btn btn--sm" id="ieRecallBtn">Recall check now</button>
+          <button type="button" class="btn btn--sm" id="ieRecallOk" hidden>I checked &mdash; clear it</button>
+          <span class="hint" id="ieRecallAsof"></span>
+        </div>
+      </div>
+      <div class="field">
+        <span class="lbl">Chore schedule</span>
+        <div id="ieChores"></div>
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap">
+          <select id="ieChoreLink" aria-label="Linked chore item" style="flex:1 1 200px; width:auto"></select>
+          <button type="button" class="btn btn--sm" id="ieChoreGo">Edit in Chores &rarr;</button>
+        </div>
+      </div>
+      <div class="det" id="ieExtra"></div>
+    </div>
+    <div class="d-ft">
+      <button class="btn btn--danger btn--sm" id="ieDelete" type="button">Delete</button>
+      <span class="spacer"></span>
+      <button class="btn" value="cancel" formnovalidate>Cancel</button>
+      <button class="btn btn--primary" value="save">Save</button>
+    </div>
+  </form>
+</dialog>
+<datalist id="roomList"></datalist>
+
+<dialog id="dlgOdo">
+  <form method="dialog">
+    <div class="d-hd"><h4 id="odoTitle">Reading</h4><p id="odoSub"></p></div>
+    <div class="d-body">
+      <div class="row2">
+        <div class="field"><label for="odoVal" id="odoLbl">Odometer</label><input type="number" id="odoVal" step="1" min="0" inputmode="numeric" required></div>
+        <div class="field"><label for="odoDate">As of</label><input type="date" id="odoDate" required></div>
+      </div>
+    </div>
+    <div class="d-ft">
+      <button class="btn" value="cancel" formnovalidate>Cancel</button>
+      <span class="spacer"></span>
+      <button class="btn btn--primary" value="save">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+/* Chore Factory on GitHub: the storage layer.
+
+   The page was written for claude.ai, where window.claude hands it a live
+   database. Here window.claude is this file instead: the same small interface
+   (collection().onSnapshot, doc().set, doc().delete), backed by one encrypted
+   file in the ruralben/chore-factory repository.
+
+   - data.enc     every chore item, task, log entry and inventory item, as one
+                  JSON document, locked with AES-GCM. The key never leaves the
+                  browser: it travels in the link (#k=...) and is remembered on
+                  each device that has opened it.
+   - nextup.json  what the kitchen display shows: task, item, due date,
+                  postponement. Written in plain text on every save, because
+                  the display reads it and it carries nothing private.
+
+   Reading needs only the key. Saving needs a GitHub key (a fine-grained token
+   that can write to this one repository), entered once per device and kept in
+   that browser only. Edits are applied at once on screen, queued, and sent a
+   moment later as one commit; if someone else saved in between, the queued
+   edits are replayed on top of their version rather than overwriting it. */
+(function(){
+  "use strict";
+
+  var OWNER = "ruralben", REPO = "chore-factory", BRANCH = "main";
+  var API = "https://api.github.com/repos/" + OWNER + "/" + REPO;
+  var RAW = "https://raw.githubusercontent.com/" + OWNER + "/" + REPO + "/" + BRANCH + "/";
+  var COLS = ["assets", "tasks", "logs", "inventory"];
+  var HORIZON = 14, DEFAULT_RATE = 30;
+  var K_TOKEN = "cf-gh-token", K_KEY = "cf-data-key", K_PENDING = "cf-pending";
+
+  /* ---------- small helpers ---------- */
+  function ls(k, v){
+    try {
+      if(v === undefined) return localStorage.getItem(k);
+      if(v === null) localStorage.removeItem(k); else localStorage.setItem(k, v);
+    } catch(e){}
+    return null;
+  }
+  function clone(o){ return JSON.parse(JSON.stringify(o)); }
+  function bytesToB64(bytes){
+    var s = "", CH = 0x8000;
+    for(var i = 0; i < bytes.length; i += CH) s += String.fromCharCode.apply(null, bytes.subarray(i, i + CH));
+    return btoa(s);
+  }
+  function b64ToBytes(b64){
+    var s = atob(b64), out = new Uint8Array(s.length);
+    for(var i = 0; i < s.length; i++) out[i] = s.charCodeAt(i);
+    return out;
+  }
+  function utf8ToB64(text){ return bytesToB64(new TextEncoder().encode(text)); }
+  function b64ToUtf8(b64){ return new TextDecoder().decode(b64ToBytes(b64.replace(/\s/g, ""))); }
+  function keyFromText(t){
+    t = String(t || "").trim();
+    var m = /[#&]k=([A-Za-z0-9_-]{20,})/.exec(t);
+    if(m) return m[1];
+    return /^[A-Za-z0-9_-]{40,}$/.test(t) ? t : "";
+  }
+
+  /* ---------- the two keys ---------- */
+  var dataKey = keyFromText(location.hash) || ls(K_KEY) || "";
+  if(keyFromText(location.hash)) ls(K_KEY, dataKey);
+  function token(){ return ls(K_TOKEN) || ""; }
+
+  var cryptoKey = null;
+  function aesKey(){
+    if(cryptoKey) return Promise.resolve(cryptoKey);
+    if(!dataKey) return Promise.reject({code:"no_key"});
+    var raw;
+    try { raw = b64ToBytes(dataKey.replace(/-/g, "+").replace(/_/g, "/") + "==".slice(0, (4 - dataKey.length % 4) % 4)); }
+    catch(e){ return Promise.reject({code:"bad_key"}); }
+    if(raw.length !== 32) return Promise.reject({code:"bad_key"});
+    return crypto.subtle.importKey("raw", raw, "AES-GCM", false, ["encrypt", "decrypt"])
+      .then(function(k){ cryptoKey = k; return k; });
+  }
+  /* File format: "CF1." + base64(12-byte nonce + ciphertext + tag). */
+  function lock(obj){
+    return aesKey().then(function(k){
+      var iv = crypto.getRandomValues(new Uint8Array(12));
+      return crypto.subtle.encrypt({name:"AES-GCM", iv:iv}, k, new TextEncoder().encode(JSON.stringify(obj)))
+        .then(function(ct){
+          var all = new Uint8Array(12 + ct.byteLength);
+          all.set(iv, 0); all.set(new Uint8Array(ct), 12);
+          return "CF1." + bytesToB64(all) + "\n";
+        });
+    });
+  }
+  function unlock(text){
+    text = String(text || "").trim();
+    if(text.indexOf("CF1.") !== 0) return Promise.reject({code:"bad_file"});
+    return aesKey().then(function(k){
+      var all = b64ToBytes(text.slice(4));
+      return crypto.subtle.decrypt({name:"AES-GCM", iv:all.subarray(0, 12)}, k, all.subarray(12))
+        .catch(function(){ throw {code:"wrong_key"}; });
+    }).then(function(buf){
+      var d = JSON.parse(new TextDecoder().decode(buf));
+      COLS.forEach(function(c){ if(!d[c] || typeof d[c] !== "object") d[c] = {}; });
+      return d;
+    });
+  }
+
+  /* ---------- GitHub ---------- */
+  function gh(path, method, body){
+    var h = {"Accept":"application/vnd.github+json", "X-GitHub-Api-Version":"2022-11-28"};
+    if(token()) h.Authorization = "Bearer " + token();
+    if(body) h["Content-Type"] = "application/json";
+    return fetch(API + path, {method:method || "GET", headers:h, cache:"no-store",
+      body:body ? JSON.stringify(body) : undefined});
+  }
+  function httpErr(res){
+    if(res.status === 401) return {code:"bad_token"};
+    if(res.status === 403 || res.status === 404) return {code: token() ? "no_access" : "http_" + res.status};
+    return {code:"http_" + res.status};
+  }
+  /* With a GitHub key, read through the API: always current, and it returns
+     the file's version (sha) needed to save. Without one, read the public raw
+     copy, which can lag a few minutes behind. */
+  function readFile(name){
+    if(token()){
+      return gh("/contents/" + name + "?ref=" + BRANCH).then(function(res){
+        if(res.status === 404) return {sha:null, text:null};
+        if(!res.ok) throw httpErr(res);
+        return res.json().then(function(j){
+          if(j.content === "" && j.download_url){       /* over 1 MB: content comes separately */
+            return fetch(j.download_url, {cache:"no-store"}).then(function(r){ return r.text(); })
+              .then(function(t){ return {sha:j.sha, text:t}; });
+          }
+          return {sha:j.sha, text:b64ToUtf8(j.content || "")};
+        });
+      });
+    }
+    return fetch(RAW + name + "?t=" + Date.now(), {cache:"no-store"}).then(function(res){
+      if(res.status === 404) return {sha:null, text:null};
+      if(!res.ok) throw httpErr(res);
+      return res.text().then(function(t){ return {sha:null, text:t}; });
+    });
+  }
+  function putFile(name, text, sha, message){
+    var body = {message:message, content:utf8ToB64(text), branch:BRANCH};
+    if(sha) body.sha = sha;
+    return gh("/contents/" + name, "PUT", body);
+  }
+
+  /* ---------- state ---------- */
+  var remote = null;          /* {sha, text, data}: the last version read from or written to GitHub */
+  var view = null;            /* what the page sees: remote plus edits not yet saved */
+  var pending = [];           /* [{path, body}] in order; body null means delete */
+  try { pending = JSON.parse(ls(K_PENDING) || "[]") || []; } catch(e){ pending = []; }
+  var subs = {}, errSubs = [];
+  var status = {state:"loading", detail:""};
+  var statusListeners = [];
+
+  function setStatus(state, detail){
+    status = {state:state, detail:detail || ""};
+    statusListeners.forEach(function(f){ try { f(status); } catch(e){} });
+  }
+  function savePending(){ ls(K_PENDING, pending.length ? JSON.stringify(pending) : null); }
+  function applyOps(data, ops){
+    ops.forEach(function(op){
+      var p = op.path.split("/"), c = p[0], id = p[1];
+      if(COLS.indexOf(c) < 0 || !id) return;
+      if(!data[c]) data[c] = {};
+      if(op.body === null) delete data[c][id]; else data[c][id] = clone(op.body);
+    });
+    return data;
+  }
+  function fire(c){
+    if(!view) return;
+    var d = view[c] || {};
+    var snap = {docs:Object.keys(d).map(function(id){
+      return {id:id, data:function(){ return clone(d[id]); }};
+    })};
+    (subs[c] || []).forEach(function(cb){ try { cb(snap); } catch(e){ console.error(e); } });
+  }
+  function fireAll(){ COLS.forEach(fire); }
+  function rebuildView(){ view = applyOps(clone(remote.data), pending); fireAll(); }
+
+  /* ---------- saving ---------- */
+  var timer = null, busy = false, retryTimer = null;
+  function schedule(ms){
+    clearTimeout(timer);
+    timer = setTimeout(commit, ms === undefined ? 1200 : ms);
+  }
+  function describe(ops){
+    var n = ops.length, first = ops[0].path;
+    return "Chore Factory: " + (n === 1 ? (ops[0].body === null ? "delete " : "save ") + first : n + " changes");
+  }
+  function commit(){
+    if(busy || !pending.length || !remote) return;
+    if(!token()){ setStatus("readonly"); return; }
+    busy = true; setStatus("saving");
+    var ops = pending.slice();
+    attempt(ops, 0).then(function(){
+      busy = false;
+      pending = pending.slice(ops.length); savePending();
+      if(pending.length) schedule(300); else setStatus("saved");
+      writeFeed();
+    }, function(e){
+      busy = false;
+      setStatus("error", e && e.code);
+      clearTimeout(retryTimer);
+      if(!e || (e.code !== "bad_token" && e.code !== "no_access")) retryTimer = setTimeout(commit, 30000);
+    });
+  }
+  function attempt(ops, n){
+    return readFile("data.enc").then(function(r){
+      var base = r.text ? unlock(r.text) : Promise.resolve(emptyData());
+      return base.then(function(data){
+        if(r.sha !== remote.sha){ remote = {sha:r.sha, text:r.text, data:data}; }
+        var next = applyOps(clone(data), ops);
+        next.savedAt = new Date().toISOString();
+        return lock(next).then(function(text){
+          return putFile("data.enc", text, r.sha, describe(ops)).then(function(res){
+            if((res.status === 409 || res.status === 422) && n < 4) return attempt(ops, n + 1);
+            if(!res.ok) throw httpErr(res);
+            return res.json().then(function(j){
+              remote = {sha:j.content.sha, text:text, data:next};
+              view = applyOps(clone(next), pending.slice(ops.length));
+              fireAll();
+            });
+          });
+        });
+      });
+    });
+  }
+  function emptyData(){ var d = {v:1}; COLS.forEach(function(c){ d[c] = {}; }); return d; }
+
+  /* ---------- the kitchen display feed ----------
+     Mirrors chorelib.due_rows in the ChoreFactory folder, which mirrors the
+     page's own countdown, so the display and the page agree. */
+  function pyRound(x){           /* Python's round(): halves go to the even neighbor */
+    var f = Math.floor(x), d = x - f;
+    if(d > 0.5) return f + 1;
+    if(d < 0.5) return f;
+    return (f % 2 === 0) ? f : f + 1;
+  }
+  function day(s){
+    var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(s || ""));
+    return m ? new Date(+m[1], +m[2] - 1, +m[3]) : null;
+  }
+  function isoOf(d){
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  }
+  function addDays(d, n){ var x = new Date(d.getFullYear(), d.getMonth(), d.getDate()); x.setDate(x.getDate() + n); return x; }
+  function between(a, b){ return Math.round((b - a) / 86400000); }
+  function usageRate(aid, a, tasks, logs){
+    var cur = a.reading, curd = day(a.readingDate);
+    if(!a.unit || cur === null || cur === undefined || !curd) return 0;
+    var oldest = null;
+    Object.keys(tasks).forEach(function(k){
+      var t = tasks[k];
+      if(t.assetId === aid && t.lastDate && t.lastReading !== null && t.lastReading !== undefined){
+        var d = day(t.lastDate); if(d && (!oldest || d < oldest[0])) oldest = [d, t.lastReading];
+      }
+    });
+    Object.keys(logs).forEach(function(k){
+      var l = logs[k];
+      if(l.assetId === aid && l.date && l.reading !== null && l.reading !== undefined){
+        var d = day(l.date); if(d && (!oldest || d < oldest[0])) oldest = [d, l.reading];
+      }
+    });
+    if(oldest){
+      var days = between(oldest[0], curd), miles = cur - oldest[1];
+      if(days >= 60 && miles > 0) return miles / days;
+    }
+    return DEFAULT_RATE;
+  }
+  function dueRows(data, today){
+    var assets = data.assets, tasks = data.tasks, logs = data.logs, rows = [];
+    Object.keys(tasks).sort().forEach(function(tid){
+      var t = tasks[tid], a = assets[t.assetId || ""];
+      if(!a || a.stored) return;
+      var best = null, iv = t.intervalDays || 0, last = day(t.lastDate);
+      if(iv > 0 && last) best = addDays(last, pyRound(iv));
+      var mi = t.intervalMiles || 0;
+      if(mi > 0 && a.unit && t.lastReading !== null && t.lastReading !== undefined &&
+         a.reading !== null && a.reading !== undefined){
+        var rate = usageRate(t.assetId, a, tasks, logs) || DEFAULT_RATE;
+        var when = addDays(today, pyRound(((t.lastReading + mi) - a.reading) / rate));
+        if(!best || when < best) best = when;
+      }
+      if(!best) return;
+      rows.push({id:tid, task:t.name || "Untitled", item:a.name || "", due:isoOf(best),
+                 snooze:t.snoozeUntil || "", paired:t.pairedWith || ""});
+    });
+    var byId = {}, absorbed = {};
+    rows.forEach(function(r){ byId[r.id] = r; });
+    rows.forEach(function(r){
+      var p = r.paired;
+      if(p && byId[p] && !absorbed[r.id]){ absorbed[p] = 1; r.task = r.task + " + " + byId[p].task; }
+    });
+    rows = rows.filter(function(r){ return !absorbed[r.id]; });
+    rows.sort(function(a, b){ return a.due < b.due ? -1 : a.due > b.due ? 1 : 0; });
+    return rows;
+  }
+  function feedText(data){
+    var today = new Date(); today = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    var feed = {generated:isoOf(today), horizon:HORIZON, live:true,
+      tasks:dueRows(data, today).map(function(r){ return {t:r.task, i:r.item, d:r.due, s:r.snooze}; })};
+    return JSON.stringify(feed, null, 1) + "\n";
+  }
+  var feedBusy = false;
+  function writeFeed(){
+    if(feedBusy || !token() || !remote) return;
+    feedBusy = true;
+    var text = feedText(remote.data);
+    readFile("nextup.json").then(function(r){
+      if(r.text === text) return;
+      return putFile("nextup.json", text, r.sha, "Chore Factory: kitchen display feed").then(function(res){
+        if(res.status === 409 || res.status === 422) return;   /* someone else just wrote it; their save carries it */
+        if(!res.ok) throw httpErr(res);
+      });
+    }).catch(function(){}).then(function(){ feedBusy = false; });
+  }
+
+  /* ---------- loading and keeping current ---------- */
+  function load(){
+    setStatus("loading");
+    if(!dataKey) return Promise.reject({code:"no_key"});
+    return readFile("data.enc").then(function(r){
+      if(!r.text) throw {code:"no_data"};
+      return unlock(r.text).then(function(data){
+        remote = {sha:r.sha, text:r.text, data:data};
+        rebuildView();
+        if(pending.length && token()) schedule(300);
+        else setStatus(token() ? "saved" : "readonly");
+        if(token()) writeFeed();
+      });
+    });
+  }
+  /* Another device may have saved. Look every minute while the page is in
+     view, and whenever it comes back into view. */
+  function poll(){
+    if(!remote || busy || pending.length || document.hidden) return;
+    readFile("data.enc").then(function(r){
+      if(!r.text || (r.sha ? r.sha === remote.sha : r.text === remote.text)) return;
+      return unlock(r.text).then(function(data){
+        if(busy || pending.length) return;
+        remote = {sha:r.sha, text:r.text, data:data};
+        rebuildView();
+      });
+    }).catch(function(){});
+  }
+  setInterval(poll, 60000);
+  document.addEventListener("visibilitychange", function(){ if(!document.hidden) poll(); });
+  window.addEventListener("beforeunload", function(e){
+    if(pending.length && token()){ commit(); e.preventDefault(); e.returnValue = ""; }
+  });
+
+  var loaded = load();
+  loaded.catch(function(e){
+    setStatus("error", e && e.code);
+    errSubs.forEach(function(f){ try { f(e); } catch(x){} });
+  });
+
+  /* ---------- what the page calls ---------- */
+  var db = {
+    collection:function(c){
+      return {onSnapshot:function(cb, err){
+        (subs[c] = subs[c] || []).push(cb);
+        if(err) errSubs.push(function(){});      /* the page's own error banner is replaced by the sync panel */
+        if(view) setTimeout(function(){ fire(c); }, 0);
+        return function(){ subs[c] = (subs[c] || []).filter(function(f){ return f !== cb; }); };
+      }};
+    },
+    doc:function(path){
+      function queue(body){
+        if(!token()){ setStatus("readonly"); return Promise.reject({code:"not_granted"}); }
+        if(!remote) return Promise.reject({code:"unavailable"});
+        pending.push({path:path, body:body}); savePending();
+        view = applyOps(view, [{path:path, body:body}]);
+        fire(path.split("/")[0]);
+        setStatus("saving"); schedule();
+        return Promise.resolve();
+      }
+      return {
+        set:function(body){ return queue(clone(body)); },
+        delete:function(){ return queue(null); }
+      };
+    }
+  };
+
+  window.claude = {use:function(name){
+    if(name === "db") return Promise.resolve(db);
+    if(name === "user") return Promise.resolve({
+      isOwner:function(){ return true; },
+      canEdit:function(){ return !!token(); },
+      can:function(n){ return n === "data.write" ? !!token() : null; }
+    });
+    if(name === "downloads") return Promise.resolve({save:function(o){
+      var a = document.createElement("a");
+      a.href = URL.createObjectURL(o.data); a.download = o.filename;
+      document.body.appendChild(a); a.click();
+      setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+      return Promise.resolve();
+    }});
+    return Promise.resolve(null);       /* photos and the Claude-only helpers are not available here */
+  }};
+
+  /* ---------- for the sync panel ---------- */
+  window.CFSync = {
+    onStatus:function(f){ statusListeners.push(f); f(status); },
+    status:function(){ return status; },
+    hasToken:function(){ return !!token(); },
+    hasKey:function(){ return !!dataKey; },
+    pendingCount:function(){ return pending.length; },
+    link:function(){ return location.origin + location.pathname + "#k=" + dataKey; },
+    setToken:function(t){
+      t = String(t || "").trim();
+      if(!t) return Promise.reject({code:"empty"});
+      var old = token(); ls(K_TOKEN, t);
+      return gh("").then(function(res){
+        if(!res.ok){ ls(K_TOKEN, old || null); throw httpErr(res); }
+        return res.json();
+      }).then(function(j){
+        if(!j.permissions || !j.permissions.push){ ls(K_TOKEN, old || null); throw {code:"no_write"}; }
+        return true;
+      });
+    },
+    forgetToken:function(){ ls(K_TOKEN, null); setStatus("readonly"); },
+    setKey:function(t){
+      var k = keyFromText(t);
+      if(!k) return Promise.reject({code:"bad_key"});
+      ls(K_KEY, k); dataKey = k; cryptoKey = null;
+      return Promise.resolve(true);
+    },
+    retry:function(){ clearTimeout(retryTimer); if(pending.length) commit(); },
+    feedFor:function(){ return remote ? feedText(remote.data) : ""; },
+    _dueRows:dueRows
+  };
+})();
+</script>
+<script>
+/* The sync button and its window: where the data is, whether this device can
+   save, and the link for other devices. */
+(function(){
+  "use strict";
+  function $(id){ return document.getElementById(id); }
+  var S = window.CFSync;
+  var WORDS = {
+    loading:"Loading", saving:"Saving", saved:"Saved", readonly:"View only"
+  };
+  var PROBLEMS = {
+    no_key:["Needs your link", "This device doesn't have your Chore Factory link, so it can't unlock the data."],
+    bad_key:["Wrong link", "That link doesn't hold a valid key. Use the full link, ending in #k=…"],
+    wrong_key:["Wrong link", "This link's key doesn't unlock the data. Open Chore Factory from your own link."],
+    bad_file:["Data file unreadable", "The data file on GitHub isn't in the expected format."],
+    no_data:["No data yet", "There is no data file on GitHub yet."],
+    bad_token:["GitHub key expired", "GitHub turned down the key saved on this device; it may have expired. Make a new one below."],
+    no_access:["GitHub key can't save", "The GitHub key on this device can't write to chore-factory. Check its repository and Contents permission."],
+    no_write:["GitHub key can't save", "That key can read but not write. Set Contents to Read and write."],
+    empty:["", "Paste the GitHub key first."]
+  };
+  function problem(code){
+    return PROBLEMS[code] || ["Not saved", "The last save didn't reach GitHub (" + (code || "no answer") + "). Your changes are kept on this device and sent when it can."];
+  }
+  function paint(st){
+    var b = $("syncBtn"); if(!b) return;
+    b.dataset.state = st.state;
+    $("syncTxt").textContent = st.state === "error" ? problem(st.detail)[0] : (WORDS[st.state] || st.state);
+    if($("dlgSync").open) fill();
+  }
+  function msg(text, kind){
+    var m = $("syncMsg");
+    m.textContent = text; m.className = "sync-msg" + (kind ? " is-" + kind : "");
+  }
+  function fill(){
+    var st = S.status();
+    $("syncKeySec").hidden = S.hasKey() && st.detail !== "wrong_key" && st.detail !== "bad_key";
+    $("syncLinkSec").hidden = !S.hasKey() || st.detail === "wrong_key";
+    $("syncTokOn").hidden = !S.hasToken();
+    $("syncTokOff").hidden = S.hasToken();
+    $("syncRetry").hidden = !(st.state === "error" && S.pendingCount());
+    if(st.state === "error") msg(problem(st.detail)[1], "bad");
+    else if(st.state === "saving") msg("Sending your changes to GitHub.");
+    else if(st.state === "loading") msg("Reading your data from GitHub.");
+    else if(st.state === "readonly") msg("Your data is on GitHub, encrypted. This device can view it but not save changes yet.");
+    else msg("Every change is saved to GitHub, encrypted, a moment after you make it. The kitchen display picks it up within a few minutes.", "good");
+  }
+  S.onStatus(paint);
+  $("syncBtn").addEventListener("click", function(){ fill(); $("dlgSync").showModal(); });
+  Array.prototype.forEach.call(document.querySelectorAll("#dlgSync [data-clear]"), function(x){
+    x.addEventListener("click", function(){ var i = $(x.dataset.clear); i.value = ""; i.focus(); });
+  });
+  $("syncTokGo").addEventListener("click", function(){
+    var btn = this; btn.disabled = true; msg("Checking the key with GitHub.");
+    S.setToken($("syncTokIn").value).then(function(){
+      msg("Connected. Reloading so this device can save.", "good");
+      setTimeout(function(){ location.reload(); }, 700);
+    }, function(e){
+      btn.disabled = false;
+      msg(problem(e && e.code)[1], "bad");
+    });
+  });
+  $("syncForget").addEventListener("click", function(){
+    if(S.pendingCount() && !confirm("Some changes haven't reached GitHub yet. Forget the key anyway?")) return;
+    S.forgetToken(); location.reload();
+  });
+  $("syncKeyGo").addEventListener("click", function(){
+    S.setKey($("syncKeyIn").value).then(function(){ location.reload(); },
+      function(){ msg(problem("bad_key")[1], "bad"); });
+  });
+  $("syncCopy").addEventListener("click", function(){
+    var link = S.link();
+    (navigator.clipboard ? navigator.clipboard.writeText(link) : Promise.reject()).then(function(){
+      msg("Link copied. Open it once on the other device; it remembers the key after that.", "good");
+    }, function(){
+      window.prompt("Copy this link:", link);
+    });
+  });
+  $("syncRetry").addEventListener("click", function(){ S.retry(); });
+  /* Opened without the key, or with the wrong one: show the window straight away. */
+  S.onStatus(function(st){
+    if(st.state === "error" && /^(no_key|wrong_key|bad_key)$/.test(st.detail) && !$("dlgSync").open){
+      fill(); $("dlgSync").showModal();
+      var l = $("loading"); if(l) l.textContent = "Waiting for your link…";
+    }
+  });
+})();
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- state ---------- */
+  var S = { db:null, ready:false, readOnly:false, nextByAsset:{}, rates:{}, showAll:false,
+            tab:"chores", inv:[], store:null, sample:null, sampleImg:false, showHush:false,
+            spot:"", openBox:"", showSold:false, drag:null, shut:{},
+            recBusy:{}, recRun:null, recMore:false,
+            assets:[], tasks:[], logs:[], loaded:{assets:false,tasks:false,logs:false,inv:false} };
+  var $ = function(id){ return document.getElementById(id); };
+  var DAY = 86400000;
+
+  /* ---------- formatting ---------- */
+  function num(n){ return (n===null||n===undefined||isNaN(n)) ? "—" : Number(n).toLocaleString("en-US"); }
+  function isoOf(d){
+    return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+  }
+  function todayISO(){ return isoOf(new Date()); }
+  /* Postpone from the later of today and any postponement already in force. */
+  function addMonths(fromISO, n){
+    var now = new Date(), d = fromISO ? parseISO(fromISO) : now;
+    if(isNaN(d) || d < now) d = new Date(now);
+    var day = d.getDate();
+    d.setMonth(d.getMonth() + n);
+    if(d.getDate() < day) d.setDate(0);
+    return isoOf(d);
+  }
+  function parseISO(s){ return s ? new Date(s + "T00:00:00") : null; }
+  /* Day counts run midnight to midnight. Measured from the current instant,
+     "12 days over" silently became 13 partway through the afternoon, and the
+     kitchen display disagreed with this page. */
+  function todayMs(){ var d = new Date(); d.setHours(0,0,0,0); return d.getTime(); }
+  function fmtDate(s){
+    var d = parseISO(s); if(!d || isNaN(d)) return "—";
+    return d.toLocaleDateString("en-US",{month:"numeric",day:"numeric",year:"2-digit"});
+  }
+  function daysLabel(d){
+    if(d < 60) return Math.round(d) + " days";
+    if(d < 700) return Math.round(d/30.44) + " mo";
+    var y = d/365.25;
+    return (Math.round(y*10)/10).toString().replace(/\.0$/,"") + " yr";
+  }
+  function esc(s){
+    return String(s===null||s===undefined ? "" : s)
+      .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
+
+  /* ---------- status ---------- */
+  /* A postponement shifts when the page nags, never when the job was last done. */
+  function statusOf(task, asset){
+    var real = rawStatus(task, asset);
+    if(task.snoozeUntil && (real.state === "overdue" || real.state === "soon")){
+      var left = Math.round((parseISO(task.snoozeUntil).getTime() - todayMs()) / DAY);
+      if(left > 0){
+        return { state:"snoozed", label:"Postponed", dueLabel:real.dueLabel,
+                 amt:"until " + fmtDate(task.snoozeUntil), daysLeft: left };
+      }
+    }
+    return real;
+  }
+
+  /* Miles per day for an asset, from the oldest dated reading we hold to its
+     current one. Lets a mileage task be placed on the same calendar as a
+     time-based one, which is what "when is this due" actually means. */
+  function usageRate(asset){
+    if(!asset || !asset.unit || asset.reading == null || !asset.readingDate) return 0;
+    if(S.rates[asset.id] !== undefined) return S.rates[asset.id];
+    var oldest = null;
+    function consider(date, reading){
+      if(!date || reading == null) return;
+      if(!oldest || date < oldest.date) oldest = {date:date, reading:reading};
+    }
+    S.tasks.forEach(function(t){ if(t.assetId === asset.id) consider(t.lastDate, t.lastReading); });
+    S.logs.forEach(function(l){ if(l.assetId === asset.id) consider(l.date, l.reading); });
+    var r = 0;
+    if(oldest){
+      var days = (parseISO(asset.readingDate).getTime() - parseISO(oldest.date).getTime()) / DAY;
+      var miles = asset.reading - oldest.reading;
+      if(days >= 60 && miles > 0) r = miles / days;
+    }
+    if(!r) r = 30;                         /* ~11k a year, until there's history to do better */
+    S.rates[asset.id] = r;
+    return r;
+  }
+
+  function rawStatus(task, asset){
+    if(asset && asset.stored) return {state:"stored", label:"Stored", amt:"", dueLabel:"", daysLeft:1e9};
+    var best = null;
+    if(task.intervalMiles > 0 && asset && asset.unit && task.lastReading != null && asset.reading != null){
+      var at = task.lastReading + task.intervalMiles;
+      var rem = at - asset.reading;
+      var est = new Date(todayMs() + (rem / usageRate(asset)) * DAY);
+      best = { daysLeft: rem / usageRate(asset),
+               dueLabel: "due at " + num(at) + " " + asset.unit + " ≈ " +
+                 est.toLocaleDateString("en-US",{month:"short",year:"numeric"}),
+               amt: rem >= 0 ? num(rem) + " " + asset.unit + " to go" : num(-rem) + " " + asset.unit + " over" };
+    }
+    if(task.intervalDays > 0 && task.lastDate){
+      var dueMs = parseISO(task.lastDate).getTime() + task.intervalDays * DAY;
+      var dRem = Math.round((dueMs - todayMs()) / DAY);
+      var d = new Date(dueMs);
+      /* Close in, the exact day is what you act on; further out, the month
+         is honest enough. */
+      var alt = { daysLeft: dRem,
+                  dueLabel: "due " + (Math.abs(dRem) <= 31 ? fmtDate(isoOf(d))
+                    : d.toLocaleDateString("en-US",{month:"short",year:"numeric"})),
+                  amt: dRem >= 0 ? daysLabel(dRem) + " to go" : daysLabel(-dRem) + " over" };
+      if(!best || alt.daysLeft < best.daysLeft) best = alt;
+    }
+    if(!best){
+      var hasInterval = (task.intervalMiles > 0 || task.intervalDays > 0);
+      return { state:"none", label: hasInterval ? "Needs a baseline" : "As needed", dueLabel:"",
+               amt: task.lastDate ? "last " + fmtDate(task.lastDate) : "not yet logged", daysLeft:1e9 };
+    }
+    /* "Due soon" has to scale with the cycle: the last quarter of it, capped at
+       two months. A flat window would mark a 10-day job due the day you did it. */
+    var soonAt = Math.min(60, Math.max(2, (task.intervalDays || 365) * 0.25));
+    best.state = best.daysLeft <= 0 ? "overdue" : (best.daysLeft <= soonAt ? "soon" : "ok");
+    best.label = best.state === "overdue" ? "Overdue" : (best.state === "soon" ? "Due soon" : "On track");
+    return best;
+  }
+  function intervalLabel(t, asset){
+    var p = [];
+    if(t.intervalMiles > 0) p.push(num(t.intervalMiles) + " " + ((asset && asset.unit) || "mi"));
+    if(t.intervalDays > 0) p.push(daysLabel(t.intervalDays));
+    return p.length ? "every " + p.join(" / ") : "no interval";
+  }
+  function lastLabel(t, asset){
+    if(!t.lastDate && t.lastReading == null) return "never logged";
+    var p = [];
+    if(t.lastDate) p.push(fmtDate(t.lastDate));
+    if(t.lastReading != null && asset && asset.unit) p.push(num(t.lastReading) + " " + asset.unit);
+    return "last " + p.join(" · ");
+  }
+
+  /* ---------- sorting helpers ---------- */
+  function assetsSorted(){ return S.assets.slice().sort(function(a,b){ return (a.order||0)-(b.order||0) || String(a.name).localeCompare(b.name); }); }
+  function tasksFor(id){ return S.tasks.filter(function(t){ return t.assetId === id; })
+      .sort(function(a,b){ return (a.order||0)-(b.order||0) || String(a.name).localeCompare(b.name); }); }
+  function assetById(id){ for(var i=0;i<S.assets.length;i++) if(S.assets[i].id===id) return S.assets[i]; return null; }
+  function pairName(t){ var p = t.pairedWith ? taskById(t.pairedWith) : null; return p ? p.name : ""; }
+  /* Tasks whose history this one wipes. Stored as a string or a list. */
+  function resetTargets(t){
+    var v = t.resetsHistoryOf;
+    if(!v) return [];
+    return (Array.isArray(v) ? v : [v])
+      .map(function(id){ return taskById(id); })
+      .filter(Boolean);
+  }
+  function taskById(id){ for(var i=0;i<S.tasks.length;i++) if(S.tasks[i].id===id) return S.tasks[i]; return null; }
+
+  /* ---------- render ---------- */
+  function render(){
+    if(!S.ready) return;
+    $("loading").hidden = true;
+    $("addAsset").hidden = S.readOnly;
+    $("addTracked").hidden = S.readOnly;
+    recBadge();
+    if(S.tab === "inv"){ renderInv(); return; }
+    if(S.tab === "rec"){ renderRec(); return; }
+    $("tally").hidden = false;
+    $("sub").textContent = S.assets.length + " items tracked · " + fmtDate(todayISO());
+
+    /* next-due task per item -> Next Up list */
+    S.rates = {};
+    var counts = {overdue:0, soon:0, ok:0};
+    S.nextByAsset = {};
+    var rows = [];
+    assetsSorted().forEach(function(a){
+      if(a.stored) return;               /* shelved items don't belong on a to-do list */
+      var next = null;
+      tasksFor(a.id).forEach(function(t){
+        var st = statusOf(t, a);
+        if(counts[st.state] !== undefined) counts[st.state]++;
+        else if(st.state === "snoozed") counts.ok++;
+        if(st.daysLeft >= 1e9) return;   /* no interval or no baseline: nothing to be due */
+        if(!next || st.daysLeft < next.st.daysLeft) next = {a:a, t:t, st:st};
+        rows.push({a:a, t:t, st:st});
+      });
+      if(next) S.nextByAsset[a.id] = next.t.id;
+    });
+
+    /* A pair is always done together, so it earns one line, not two. */
+    var absorbed = {};
+    rows = rows.filter(function(r){
+      if(!r.t.pairedWith || absorbed[r.t.id]) return !absorbed[r.t.id];
+      absorbed[r.t.pairedWith] = true;
+      r.pairTitle = r.t.name + " + " + pairName(r.t);
+      return true;
+    });
+    rows.sort(function(x,y){ return x.st.daysLeft - y.st.daysLeft; });
+
+    /* The default list is what needs doing, not a catalog. Everything else
+       is one tap away, and the soonest of it names the empty state. */
+    var upNext = rows[0] || null, hidden = 0;
+    if(!S.showAll){
+      rows = rows.filter(function(r){
+        /* Overdue, plus anything coming due in the next two weeks. */
+        if(r.st.state === "overdue" || r.st.daysLeft <= 14) return true;
+        hidden++; return false;
+      });
+    }
+
+    var tal = $("tally").children;
+    tal[0].firstElementChild.textContent = counts.overdue;
+    tal[1].firstElementChild.textContent = counts.soon;
+    tal[2].firstElementChild.textContent = counts.ok;
+
+    /* Next Up board */
+    var flag = counts.overdue ? counts.overdue + " overdue"
+             : (counts.soon ? counts.soon + " due soon" : "all on track");
+    var due = '<div class="due"><div class="due-hd"><h2>Next up</h2>' +
+      '<span class="note">' + (S.showAll ? "Everything upcoming" : "Next 14 days") + " · " + flag + "</span>" +
+      '<button class="btn btn--sm btn--ghost" id="horizonBtn">' +
+        (S.showAll ? "Next 14 days" : "Show all" + (hidden ? " (+" + hidden + ")" : "")) +
+      "</button></div>";
+    if(!rows.length){
+      due += '<div class="due-empty"><b>Nothing due in the next 14 days.</b>' +
+        (upNext ? " Next is " + esc(upNext.pairTitle || upNext.t.name) + " on the " +
+          esc(upNext.a.name) + ", " + esc(upNext.st.amt) + "." : "") + "</div>";
+    } else {
+      rows.forEach(function(r){
+        var title = r.pairTitle || r.t.name;
+        var bits = [r.a.name, lastLabel(r.t, r.a)];
+        if(r.st.dueLabel) bits.push(r.st.dueLabel);
+        due += '<div class="due-row s-' + r.st.state + '">' +
+          '<span class="stripe"></span>' +
+          '<button class="due-open"' + (r.t ? ' data-task="' + esc(r.t.id) + '"' : " disabled") + '>' +
+            '<span class="what"><b>' + esc(title) + '</b><span>' +
+            esc(bits.join(" · ")) + '</span></span></button>' +
+          '<span class="amt">' + esc(r.st.amt || r.st.label) + '</span>' +
+          (r.t ? actionsHTML(r.t) : '<span class="go"></span>') + '</div>';
+      });
+    }
+    $("due").innerHTML = due + "</div>";
+
+    /* panels, grouped by area */
+    var order = [], byGroup = {}, STOW = "Off Season & Reference";
+    assetsSorted().forEach(function(a){
+      /* Anything shelved drops to the bottom section, whatever area it belongs to. */
+      var g = a.stored ? STOW : ((a.group || "Other").trim() || "Other");
+      if(!byGroup[g]){ byGroup[g] = []; order.push(g); }
+      byGroup[g].push(a);
+    });
+    var si = order.indexOf(STOW);
+    if(si > -1){ order.splice(si, 1); order.push(STOW); }
+    $("groupList").innerHTML = order.map(function(g){ return '<option value="' + esc(g) + '">'; }).join("");
+
+    var html = "";
+    order.forEach(function(g){
+      html += '<h2 class="grp">' + esc(g) + '<span class="n">' + byGroup[g].length + '</span></h2><div class="grid">';
+      html += byGroup[g].map(panelHTML).join("");
+      html += "</div>";
+    });
+    $("grid").innerHTML = html;
+  }
+
+  /* A task with no interval never comes due, so it gets no Postpone. */
+  function actionsHTML(t){
+    if(S.readOnly) return "";
+    var id = esc(t.id), timed = (t.intervalMiles > 0 || t.intervalDays > 0);
+    return '<span class="t-acts">' +
+      '<button class="btn btn--sm btn--go" data-done="' + id + '">Done today!</button>' +
+      (timed ? '<button class="btn btn--sm btn--wait" data-snooze="' + id + '" title="Postpone a month">' +
+        '<span class="wide">Postpone </span>1 mo</button>' : "") +
+      '<button class="btn btn--sm btn--ghost btn--more" data-log="' + id + '" ' +
+        'title="Log with a date, reading and note" aria-label="Log with details">…</button>' +
+      '</span>';
+  }
+
+  function panelHTML(a){
+      var ts = tasksFor(a.id), html = "";
+      html += '<section class="panel' + (a.stored ? " is-stored" : "") + '" data-panel="' + esc(a.id) + '">';
+      var nt = S.nextByAsset[a.id] ? taskById(S.nextByAsset[a.id]) : null;
+      var pst = nt ? statusOf(nt, a) : (a.stored ? {state:"stored", label:"Stored"} : null);
+      html += '<div class="p-hd"><div class="name"><div class="p-title"><h3>' + esc(a.name) + '</h3>' +
+        (pst ? '<span class="chip s-' + pst.state + '">' + esc(pst.label) + "</span>" : "") +
+        '</div><div class="kind">' + '<span>' + esc(a.kind || "Item") + '</span>' +
+        (a.stored ? '<span class="stored-tag">Stored</span>' : "") + '</div></div>';
+      if(a.unit){
+        html += '<div class="odo"><button data-odo="' + esc(a.id) + '" title="Update reading">' +
+          num(a.reading) + '<span class="unit">' + esc(a.unit) + '</span></button>' +
+          '<div class="asof">as of ' + fmtDate(a.readingDate) + '</div></div>';
+      }
+      html += "</div>";
+
+      if(a.specs && a.specs.length){
+        html += '<dl class="specs">';
+        a.specs.forEach(function(s){
+          var wide = String(s.v || "").length > 28;
+          html += '<div class="spec' + (wide ? " spec--wide" : "") + '"><dt>' + esc(s.k) + '</dt><dd>' + esc(s.v) + "</dd></div>";
+        });
+        html += "</dl>";
+      }
+
+      if(!ts.length){
+        html += '<div class="p-empty">Reference only — no scheduled tasks.</div>';
+      } else {
+        html += '<ul class="tasks">';
+        var recOpened = false;
+        ts.forEach(function(t){
+          var st = statusOf(t, a);
+          /* No interval means this is a record, not a schedule: show the last
+             date and reading at a glance, one tap to stamp it done. */
+          if(!(t.intervalMiles > 0 || t.intervalDays > 0)){
+            if(!recOpened){
+              recOpened = true;
+              html += '<li class="rec-hd">On record — no schedule</li>';
+            }
+            var when = [];
+            if(t.lastDate) when.push(fmtDate(t.lastDate));
+            if(t.lastReading != null && a.unit) when.push(num(t.lastReading) + " " + a.unit);
+            /* The run of earlier dates, the way the board wrote them. */
+            var trail = S.logs.filter(function(l){ return l.taskId === t.id && l.date !== t.lastDate; })
+              .sort(function(x, y){ return (y.ts || 0) - (x.ts || 0); })
+              .slice(0, 4).map(function(l){ return fmtDate(l.date); });
+            html += '<li class="task task--rec">' +
+              '<div class="t-main"><button class="t-name" data-task="' + esc(t.id) + '">' +
+                esc(t.name) + "</button>" +
+                (t.note ? '<div class="t-meta">' + esc(t.note) + "</div>" : "") +
+                (resetTargets(t).length
+                  ? '<div class="t-meta"><span class="pair">resets ' +
+                    esc(resetTargets(t).map(function(x){ return x.name; }).join(" + ")) +
+                    " history</span></div>" : "") +
+                (trail.length ? '<div class="t-meta t-trail">before that ' +
+                  esc(trail.join(" · ")) + "</div>" : "") + "</div>" +
+              '<div class="t-right"><span class="t-amt t-rec">' +
+                (when.length ? esc(when.join(" · ")) : "—") + "</span>" +
+                (S.readOnly ? "" : '<button class="btn btn--sm btn--go" data-done="' +
+                  esc(t.id) + '">Done today!</button>') +
+              "</div></li>";
+            return;
+          }
+          var isNext = S.nextByAsset[a.id] === t.id;
+          html += '<li class="task s-' + st.state + (isNext ? " is-next" : "") + '"><div class="t-main">' +
+            '<button class="t-name" data-task="' + esc(t.id) + '">' +
+              (isNext ? '<span class="next-tag">Next</span>' : "") + esc(t.name) + "</button>" +
+            '<div class="t-meta">' + esc(lastLabel(t, a)) + " · " + esc(intervalLabel(t, a)) +
+            (st.dueLabel ? " · " + esc(st.dueLabel) : "") +
+            (t.note ? " · " + esc(t.note) : "") +
+            (pairName(t) ? ' · <span class="pair">always with ' + esc(pairName(t)) + "</span>" : "") +
+            "</div></div>" +
+            '<div class="t-right"><span class="t-amt">' + esc(st.amt) + "</span>" +
+            actionsHTML(t) + "</div></li>";
+        });
+        html += "</ul>";
+      }
+      if(!S.readOnly){
+        html += '<div class="p-ft"><button class="btn btn--sm" data-newtask="' + esc(a.id) + '">+ Task</button>' +
+          '<button class="btn btn--sm btn--ghost" data-edit="' + esc(a.id) + '">Edit item</button></div>';
+      }
+      return html + "</section>";
+  }
+
+  /* ---------- writes ---------- */
+  function toast(msg){
+    var t = $("toast");
+    if(t) t.remove();
+    t = document.createElement("div");
+    t.id = "toast"; t.textContent = msg; t.setAttribute("role","status");
+    document.body.appendChild(t);
+    setTimeout(function(){ if(t.parentNode) t.remove(); }, 2600);
+  }
+  function fail(e){
+    var code = e && e.code;
+    if(code === "invalid_argument" || code === "not_granted"){
+      S.readOnly = true; render();
+      toast("You have read-only access — nothing was saved.");
+    } else if(code === "quota_exceeded"){
+      toast("Storage is full. Delete some history first.");
+    } else {
+      toast("Could not save — try again.");
+    }
+  }
+  function save(path, body){
+    if(!S.db) return Promise.reject({code:"not_granted"});
+    return S.db.doc(path).set(body).catch(function(e){ fail(e); throw e; });
+  }
+  function stripId(o){ var c = {}; for(var k in o) if(k !== "id") c[k] = o[k]; return c; }
+  function newId(p){ return p + "_" + Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+
+  /* ================= INVENTORY ================= */
+
+  /* 24x24 stroke glyphs, drawn to read at 16px. */
+  var ICONS = {
+    laptop:   "M4 5h16v10H4z M2 18h20 M9 18h6",
+    desktop:  "M5 3h10v18H5z M8 6h4 M8 9h4 M8 17h4",
+    monitor:  "M3 4h18v12H3z M9 20h6 M12 16v4",
+    phone:    "M7 2h10v20H7z M10 19h4",
+    tv:       "M2 5h20v12H2z M8 21h8 M12 17v4",
+    audio:    "M4 4h16v16H4z M12 9a2.5 2.5 0 100 5 2.5 2.5 0 100-5 M8 7h.01 M16 7h.01",
+    camera:   "M3 7h4l2-2h6l2 2h4v12H3z M12 16a3.5 3.5 0 100-7 3.5 3.5 0 100 7",
+    network:  "M3 13h18v6H3z M7 16h.01 M11 16h.01 M12 3v6 M8 6l4-3 4 3",
+    console:  "M7 8h10a4 4 0 010 8H7a4 4 0 010-8 M9 10v4 M7 12h4 M16 11h.01 M18 13h.01",
+    printer:  "M7 3h10v5H7z M4 8h16v8H4z M7 14h10v7H7z",
+    kitchen:  "M5 3h14v18H5z M5 10h14 M8 6h2 M8 14h2",
+    laundry:  "M4 3h16v18H4z M12 17a4.5 4.5 0 100-9 4.5 4.5 0 100 9 M8 6h.01 M11 6h.01",
+    hvac:     "M3 5h18v14H3z M7 9v6 M12 9v6 M17 9v6",
+    water:    "M12 3c4 5 6 7.5 6 10a6 6 0 01-12 0c0-2.5 2-5 6-10z",
+    yard:     "M4 17h16 M7 17V9a5 5 0 0110 0v8 M12 4v3",
+    fitness:  "M4 9v6 M20 9v6 M7 6v12 M17 6v12 M7 12h10",
+    bike:     "M6.5 18a3.5 3.5 0 100-7 3.5 3.5 0 100 7 M17.5 18a3.5 3.5 0 100-7 3.5 3.5 0 100 7 M6.5 14.5L11 6h4 M11 6l5.5 8.5",
+    boat:     "M3 15c3 4 15 4 18 0 M5 15l1-6h12l1 6 M12 3v6",
+    tool:     "M3 18l9-9 M14 3l7 7-4 4-7-7z M6 15l3 3",
+    furniture:"M3 10V6h18v4 M3 10h18v8 M6 18v2 M18 18v2",
+    clean:    "M8 3h8l-1 7H9z M9 10h6l1 11H8z",
+    bin:      "M3 7l9-4 9 4v10l-9 4-9-4z M3 7l9 4 9-4 M12 11v10",
+    car:      "M3 16v-3l2-5h14l2 5v3 M3 16h18 M6 16v2 M18 16v2 M7 12h10 M7 16h.01 M17 16h.01",
+    misc:     "M4 4h16v16H4z M9 9h6v6H9z"
+  };
+  function icon(kind){
+    var d = ICONS[kind] || ICONS.misc;
+    return '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+      d.split(" M").map(function(p, i){
+        return '<path d="' + (i ? "M" + p : p) + '"/>';
+      }).join("") + "</svg>";
+  }
+
+  var HOUSE_NAME = "Winchester";
+
+  /* The house as it actually stacks. Any room in the data that isn't listed
+     here lands in "Elsewhere" at the bottom, so adding one needs no code. */
+  var LEVELS = [
+    {name:"Top level",  rooms:["Bedrooms"]},
+    {name:"Ground",     rooms:["Kitchen", "Mudroom", "Garage", "Outside"], outside:true},
+    {name:"Sublevel",   rooms:["Family room", "Ben's office", "Tara & Kids office"]},
+    {name:"Lowest",     rooms:["Basement", "Utility"]},
+    {name:"Not placed",  rooms:["Unassigned"], unplaced:true}
+  ];
+  function knownRooms(){
+    var out = [];
+    LEVELS.forEach(function(l){
+      if(l.unplaced) return;
+      l.rooms.forEach(function(r){ out.push(r); });
+    });
+    S.inv.forEach(function(it){ if(it.room && out.indexOf(it.room) < 0) out.push(it.room); });
+    return out;
+  }
+
+  function warrantyOf(it){
+    if(it.lifetime) return {cls:"w-life", label:"Lifetime", days:1e9};
+    if(!it.warrantyEnds) return {cls:"w-dead", label:"", days:null};
+    var d = Math.round((parseISO(it.warrantyEnds).getTime() - todayMs()) / DAY);
+    if(d < 0) return {cls:"w-dead", label:"Expired " + fmtDate(it.warrantyEnds), days:d};
+    if(d <= 365) return {cls:"w-soon", label:"Until " + fmtDate(it.warrantyEnds), days:d};
+    return {cls:"w-live", label:"Until " + fmtDate(it.warrantyEnds), days:d};
+  }
+
+  /* A build is a machine you own as a unit; a bin is a pile you pick from.
+     Both collapse to one chip, but only the machine is a working system. */
+  var BOXES = {
+    "PC.2018.BEN":   {kind:"desktop", label:"PC.2018.BEN"},
+    "PC.2019.Truman":{kind:"desktop", label:"PC.2019.Truman"},
+    "PC.2020.Calvin":{kind:"desktop", label:"PC.2020.Calvin"},
+    "PC2024.BEN":    {kind:"desktop", label:"PC2024.BEN"},
+    "PC spares":     {kind:"bin",     label:"PC spares"}
+  };
+  /* Containers you put things into, as opposed to machines derived from a
+     category. Contents keep their own category and warranty. */
+  var BINS = {
+    "Storage Box": {kind:"bin", label:"Storage Box", room:"Basement", placed:true}
+  };
+  function boxOf(it){
+    if(it.sold || S.showSold) return null;
+    if(it.box && BINS[it.box]) return it.box;
+    return BOXES[it.category] ? it.category : null;
+  }
+  function boxMeta(key){ return BINS[key] || BOXES[key]; }
+  /* Group a list into collapsed boxes plus everything that stands alone. */
+  function boxify(list){
+    var boxes = {}, order = [], loose = [];
+    list.forEach(function(it){
+      var b = boxOf(it);
+      if(!b){ loose.push(it); return; }
+      if(!boxes[b]){ boxes[b] = {key:b, meta:boxMeta(b), parts:[]}; order.push(b); }
+      boxes[b].parts.push(it);
+    });
+    Object.keys(BINS).forEach(function(k){
+      if(!boxes[k]){ boxes[k] = {key:k, meta:BINS[k], parts:[]}; order.push(k); }
+    });
+    return {boxes:order.map(function(k){ return boxes[k]; }), loose:loose};
+  }
+  function boxRoom(box){
+    if(box.meta && box.meta.room) return box.meta.room;
+    var tally = {}, best = "", n = 0;
+    box.parts.forEach(function(p){
+      var r = p.room || "";
+      if(!r) return;
+      tally[r] = (tally[r] || 0) + 1;
+      if(tally[r] > n){ n = tally[r]; best = r; }
+    });
+    return best;
+  }
+  /* Soonest warranty still running among the parts. */
+  function boxWarranty(box){
+    var best = null;
+    box.parts.forEach(function(p){
+      var w = warrantyOf(p);
+      if(w.days !== null && w.days > 0 && (!best || w.days < best.days)) best = w;
+    });
+    return best;
+  }
+  function spotlit(it){
+    if(!S.spot) return false;
+    var c = (it.category || "").toLowerCase();
+    if(S.spot === "Computer") return c.indexOf("pc") === 0 || c === "computer";
+    return (it.category || "") === S.spot;
+  }
+
+  function invFiltered(){
+    var q = ($("invQ").value || "").trim().toLowerCase();
+    var room = $("invRoom").value, cat = $("invCat").value, wf = $("invW").value;
+    return S.inv.filter(function(it){
+      if(it.sold && !S.showSold) return false;
+      if(room === "__none"){ if(it.room) return false; }
+      else if(room && (it.room || "") !== room) return false;
+      if(cat && (it.category || "") !== cat) return false;
+      if(wf){
+        var w = warrantyOf(it);
+        if(wf === "none" && w.days !== null) return false;
+        if(wf === "live" && !(w.days !== null && w.days > 365)) return false;
+        if(wf === "soon" && !(w.days !== null && w.days >= 0 && w.days <= 365)) return false;
+        if(wf === "dead" && !(w.days !== null && w.days < 0)) return false;
+      }
+      if(q){
+        var hay = [it.name, it.make, it.model, it.modelNo, it.serial, it.category, it.room, it.notes]
+          .join(" ").toLowerCase();
+        if(hay.indexOf(q) < 0) return false;
+      }
+      return true;
+    });
+  }
+
+  function renderInv(){
+    if(!S.ready) return;
+    $("invN").textContent = S.inv.length;
+
+    /* filter menus, built from the data once it is loaded */
+    function fill(sel, values){
+      var cur = sel.value;
+      sel.innerHTML = sel.firstElementChild.outerHTML +
+        values.map(function(v){ return '<option>' + esc(v) + "</option>"; }).join("");
+      sel.value = cur;
+    }
+    var rooms = [], cats = [];
+    S.inv.forEach(function(it){
+      if(it.room && rooms.indexOf(it.room) < 0) rooms.push(it.room);
+      if(it.category && cats.indexOf(it.category) < 0) cats.push(it.category);
+    });
+    rooms.sort(); cats.sort();
+    fill($("invRoom"), rooms);
+    var noRoom = S.inv.filter(function(it){ return !it.room && !(it.sold && !S.showSold); }).length;
+    if(noRoom){
+      var o = document.createElement("option");
+      o.value = "__none";
+      o.textContent = "— No room (" + noRoom + ") —";
+      if($("invRoom").value === "__none") o.selected = true;
+      $("invRoom").appendChild(o);
+    }
+    fill($("invCat"), cats);
+    $("roomList").innerHTML = rooms.map(function(r){ return '<option value="' + esc(r) + '">'; }).join("");
+
+    /* anything still needing a decision goes above the fold */
+    var open = S.inv.filter(function(it){
+      return it.recall && !it.recall.dismissed &&
+        (it.recall.status === "action" || it.recall.status === "check");
+    }).sort(function(a, b){ return a.recall.status === "action" ? -1 : 1; });
+    var hush = S.inv.filter(function(it){ return it.recall && it.recall.dismissed; });
+
+    var top = open.map(function(it){
+      return '<div class="recall-banner"><h3>' + esc(it.recall.headline) + "</h3>" +
+        "<p><b>" + esc(it.name) + "</b> — " + esc(it.make) + " " +
+        esc(it.modelNo || it.model) + ". " + esc(it.recall.detail) + "</p>" +
+        '<p class="todo">▸ ' + esc(it.recall.todo || "") +
+        (it.recall.url ? ' &middot; <a href="' + esc(it.recall.url) +
+          '" target="_blank" rel="noopener">CPSC ' + esc(it.recall.recallNumber || "notice") + "</a>" : "") +
+        "</p>" +
+        (S.readOnly ? "" : '<div class="rc-acts"><button class="btn btn--sm btn--primary" data-rc-clear="' +
+          esc(it.id) + '">I checked — clear it</button>' +
+          '<button class="btn btn--sm" data-dismiss="' + esc(it.id) + '">Dismiss</button></div>') +
+        "</div>";
+    }).join("");
+    if(hush.length){
+      top += '<p class="dismissed-note">' + hush.length + " dismissed notice" +
+        (hush.length > 1 ? "s" : "") +
+        ' <button class="btn btn--sm btn--ghost" id="showHush">' +
+        (S.showHush ? "Hide" : "Show") + "</button></p>";
+      if(S.showHush){
+        top += hush.map(function(it){
+          return '<div class="recall-banner" style="border-color:var(--rule-2);' +
+            'background:var(--panel-2)"><h3 style="color:var(--ink-2)">' +
+            esc(it.recall.headline) + "</h3><p><b>" + esc(it.name) + "</b> — " +
+            esc(it.recall.detail) + "</p>" +
+            (S.readOnly ? "" : '<button class="btn btn--sm" data-undismiss="' + esc(it.id) +
+              '">Restore</button>') + "</div>";
+        }).join("");
+      }
+    }
+    $("recallTop").innerHTML = top;
+
+    var list = invFiltered();
+    $("invCount").innerHTML = (list.length === S.inv.length
+      ? S.inv.length + " items"
+      : list.length + " of " + S.inv.length) +
+      ' <button class="btn btn--sm btn--ghost" id="grpAll">' +
+      (Object.keys(S.shut).length ? "Expand all" : "Collapse all") + "</button>";
+
+    /* spotlight buttons */
+    var cats = [], seen = {};
+    S.inv.forEach(function(it){
+      var c = (it.category || "").toLowerCase();
+      var label = (c.indexOf("pc") === 0 || c === "computer") ? "Computer" : (it.category || "");
+      if(label && !seen[label]){ seen[label] = 1; cats.push(label); }
+    });
+    cats.sort();
+    $("spots").innerHTML = cats.map(function(c){
+      return '<button class="spot' + (S.spot === c ? " on" : "") + '" data-spot="' +
+        esc(c) + '">' + esc(c) + "</button>";
+    }).join("") + (S.spot ? '<button class="spot spot--clear" data-spot="">Clear</button>' : "");
+
+    /* house — collapse builds and bins into one chip each */
+    var placed = {}, loose = 0;
+    var grouped = boxify(list);
+    grouped.loose.forEach(function(it){
+      var r = it.room || "Unassigned";
+      if(!it.room) loose++;
+      (placed[r] = placed[r] || []).push({item:it});
+    });
+    grouped.boxes.forEach(function(b){
+      var r = boxRoom(b) || "Unassigned";
+      if(!boxRoom(b)) loose += b.parts.length;
+      (placed[r] = placed[r] || []).push({box:b});
+    });
+    var mapped = {};
+    LEVELS.forEach(function(l){ l.rooms.forEach(function(r){ mapped[r] = 1; }); });
+    var strays = Object.keys(placed).filter(function(r){ return !mapped[r]; }).sort();
+    var levels = LEVELS.concat(strays.length ? [{name:"Elsewhere", rooms:strays}] : []);
+
+    var h = '<div class="house"><div class="roofwrap">' +
+      '<svg class="roof" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true">' +
+      '<polygon points="50,0 100,10 0,10" fill="var(--panel-2)" stroke="var(--ink)" stroke-width="0.6"/></svg>' +
+      '<span class="gable">' + esc(HOUSE_NAME) + "</span></div>" +
+      '<div class="floors">';
+    levels.forEach(function(f){
+      h += '<div class="lvl">' + esc(f.name) + "</div>";
+      h += '<div class="floor" style="grid-template-columns:repeat(' +
+        Math.min(f.rooms.length, 4) + ',minmax(0,1fr))">';
+      f.rooms.forEach(function(rm){
+        var its = placed[rm] || [];
+        var hits = 0;
+        its.forEach(function(e){
+          hits += e.box ? e.box.parts.filter(spotlit).length : (spotlit(e.item) ? 1 : 0);
+        });
+        h += '<div class="room' + (f.outside ? " room--out" : "") + (f.unplaced ? " room--none" : "") +
+          '" data-room="' + (f.unplaced ? "" : esc(rm)) + '"><h4>' + esc(rm) +
+          (its.length ? "<b>" + its.length + "</b>" : "") +
+          (S.spot && hits ? '<i class="hit">' + hits + " matched</i>" : "") +
+          "</h4><div class='things'>";
+        h += its.map(function(e){
+          if(e.box){
+            var b = e.box, on = S.openBox === b.key;
+            var lit = b.parts.some(spotlit);
+            var w = b.meta.placed ? null : boxWarranty(b);
+            var out = '<button class="thing thing--box' + (b.meta.placed ? " thing--bin" : "") + (S.spot ? (lit ? " lit" : " dim") : "") +
+              '" data-box="' + esc(b.key) + '" title="' + esc(b.meta.label) + '">' +
+              icon(b.meta.kind) + "<span>" + esc(b.meta.label) + "</span>" +
+              '<i class="cnt">' + b.parts.length + "</i>" +
+              '<i class="caret">' + (on ? "▾" : "▸") + "</i></button>";
+            if(on){
+              out += '<div class="exploded">' + b.parts.map(function(p){
+                return '<button class="thing thing--part" data-item="' + esc(p.id) + '">' +
+                  icon(p.kind) + "<span>" + esc(p.name) + "</span></button>";
+              }).join("") +
+              (w ? '<span class="box-w">soonest warranty ' + esc(w.label) + "</span>" : "") +
+              "</div>";
+            }
+            return out;
+          }
+          var it = e.item;
+          var bad = it.recall && it.recall.status === "action" && !it.recall.dismissed;
+          return '<button class="thing' + (bad ? " has-recall" : "") +
+            (S.spot ? (spotlit(it) ? " lit" : " dim") : "") + '" data-item="' +
+            esc(it.id) + '" title="' + esc(it.name + " — " + it.make) + '">' +
+            icon(it.kind) + "<span>" + esc(it.name) + "</span></button>";
+        }).join("");
+        h += "</div></div>";
+      });
+      h += "</div>";
+    });
+    h += "</div></div>";
+    $("house").innerHTML = h;
+
+    /* the rest, grouped by category */
+    var byCat = {}, order = [];
+    list.forEach(function(it){
+      var c = it.category || "Uncategorized";
+      if(!byCat[c]){ byCat[c] = []; order.push(c); }
+      byCat[c].push(it);
+    });
+    order.sort(function(a, b){
+      var pa = a === "Personal Items" ? 1 : 0, pb = b === "Personal Items" ? 1 : 0;
+      return (pa - pb) || a.localeCompare(b);
+    });
+    var out = "";
+    if(!list.length){
+      out = '<div class="due-empty">Nothing matches that search.</div>';
+    }
+    order.forEach(function(c){
+      var isShut = !!S.shut[c];
+      out += '<h3 class="inv-grp"><button class="grp-t" data-grp="' + esc(c) + '">' +
+        '<span class="cx">' + (isShut ? "▸" : "▾") + "</span>" + esc(c) +
+        '<span class="gn">' + byCat[c].length + "</span></button></h3>";
+      if(isShut) return;
+      out += "<ul class='inv-list'>";
+      byCat[c].sort(function(a, b){ return a.name.localeCompare(b.name); });
+      byCat[c].forEach(function(it){
+        var w = warrantyOf(it);
+        var sub = [it.make, it.modelNo || it.model].filter(Boolean).join(" · ");
+        if(it.serial) sub += (sub ? " · " : "") + "S/N " + it.serial;
+        var where = it.room
+          ? '<span class="rm">' + esc(it.room) + "</span>"
+          : '<span class="rm rm--none">no room</span>';
+        out += '<li><button class="inv-row" data-item="' + esc(it.id) + '">' + icon(it.kind) +
+          '<span class="nm"><b>' + esc(it.name) +
+          (it.recall ? ' <span class="rtag r-' + it.recall.status + '">' +
+            (it.recall.status === "cleared" ? "checked" : it.recall.status) + "</span>" : "") +
+          (it.sold ? ' <span class="rtag r-sold">sold</span>' : "") +
+          "</b><span>" + where + (sub ? " · " + esc(sub) : "") + "</span></span>" +
+          '<span class="rt">' + (it.purchased ? fmtDate(it.purchased) : esc(it.purchasedRaw || "—")) +
+          (w.label ? '<br><span class="wtag ' + w.cls + '">' + esc(w.label) + "</span>" : "") +
+          "</span></button></li>";
+      });
+      out += "</ul>";
+    });
+    $("invList").innerHTML = out;
+  }
+
+  /* ---------- drag a tile into another room ---------- */
+  function moveTo(kind, id, room){
+    var picks = [];
+    if(kind === "box"){
+      picks = BINS[id]
+        ? S.inv.filter(function(x){ return x.box === id; })
+        : S.inv.filter(function(x){ return x.category === id; });
+    } else {
+      for(var i = 0; i < S.inv.length; i++) if(S.inv[i].id === id) picks = [S.inv[i]];
+    }
+    if(!picks.length || !picks[0]) return;
+    var bin = BINS[room] ? room : "";
+    var dest = bin ? (BINS[bin].room || "") : room;
+    if(picks.every(function(p){
+      return (p.room || "") === dest && (p.box || "") === bin;
+    })) return;
+    var chain = Promise.resolve();
+    picks.forEach(function(p){
+      chain = chain.then(function(){
+        return save("inventory/" + p.id, Object.assign(stripId(p), {room:dest, box:bin}));
+      });
+    });
+    chain.then(function(){
+      var where = bin || room || "Unassigned";
+      toast(picks.length > 1
+        ? picks.length + " parts → " + where
+        : picks[0].name + " → " + where);
+    }).catch(function(){});
+  }
+
+  /* Pointer drag rather than HTML5 dnd: buttons drag unreliably through
+     dataTransfer, and native dnd does not exist on touch at all. */
+  var dragS = null, swallowClick = false;
+
+  function endDrag(e, drop){
+    if(!dragS) return;
+    var st = dragS; dragS = null;
+    if(!st.ghost) return;
+    st.ghost.remove();
+    st.el.classList.remove("dragging");
+    var room = null;
+    var target = null;
+    if(drop){
+      var under = document.elementFromPoint(e.clientX, e.clientY);
+      var chip = under && under.closest(".thing--box");
+      if(chip && chip.dataset.box && BINS[chip.dataset.box] && chip.dataset.box !== st.id){
+        target = chip.dataset.box;
+      } else {
+        room = under && under.closest(".room");
+        if(room) target = room.dataset.room || "";
+      }
+    }
+    Array.prototype.forEach.call(document.querySelectorAll(".room.over,.thing.over"),
+      function(r){ r.classList.remove("over"); });
+    if(target !== null) moveTo(st.kind, st.id, target);
+    swallowClick = true;
+    setTimeout(function(){ swallowClick = false; }, 60);
+  }
+
+  document.addEventListener("pointerdown", function(e){
+    if(S.readOnly || S.tab !== "inv" || e.button) return;
+    var t = e.target.closest(".thing");
+    if(!t || !(t.dataset.item || t.dataset.box)) return;
+    dragS = {el:t, id:t.dataset.box || t.dataset.item,
+             kind:t.dataset.box ? "box" : "item",
+             x:e.clientX, y:e.clientY, pid:e.pointerId, ghost:null};
+  });
+
+  document.addEventListener("pointermove", function(e){
+    if(!dragS || e.pointerId !== dragS.pid) return;
+    if(!dragS.ghost){
+      if(Math.abs(e.clientX - dragS.x) + Math.abs(e.clientY - dragS.y) < 8) return;
+      var g = dragS.el.cloneNode(true);
+      g.classList.add("ghost");
+      document.body.appendChild(g);
+      dragS.ghost = g;
+      dragS.el.classList.add("dragging");
+    }
+    e.preventDefault();
+    dragS.ghost.style.left = (e.clientX + 10) + "px";
+    dragS.ghost.style.top = (e.clientY + 10) + "px";
+    var under = document.elementFromPoint(e.clientX, e.clientY);
+    var chip = under && under.closest(".thing--box");
+    var overBin = (chip && chip.dataset.box && BINS[chip.dataset.box] &&
+                   chip.dataset.box !== dragS.id) ? chip : null;
+    var room = overBin ? null : (under && under.closest(".room"));
+    Array.prototype.forEach.call(document.querySelectorAll(".room.over,.thing.over"),
+      function(r){ if(r !== room && r !== overBin) r.classList.remove("over"); });
+    if(overBin) overBin.classList.add("over");
+    else if(room) room.classList.add("over");
+  });
+
+  document.addEventListener("pointerup", function(e){ endDrag(e, true); });
+  document.addEventListener("pointercancel", function(e){ endDrag(e, false); });
+
+  /* One dialog serves both a new item and an existing one. A new item is a
+     draft until Save: its photos are uploaded as they arrive and dropped
+     again if the dialog is cancelled. */
+  function itemById(id){
+    for(var i = 0; i < S.inv.length; i++) if(S.inv[i].id === id) return S.inv[i];
+    return null;
+  }
+  function fillRooms(cur){
+    var rooms = knownRooms().sort();
+    $("ieRoom").innerHTML = '<option value="">— No room —</option>' +
+      rooms.map(function(r){ return "<option>" + esc(r) + "</option>"; }).join("") +
+      '<option value="__other">Other…</option>';
+    $("ieRoom").value = (cur && rooms.indexOf(cur) >= 0) ? cur : "";
+    $("ieRoomNew").value = ""; $("ieRoomNew").hidden = true;
+  }
+  function clearAiMarks(){
+    Array.prototype.forEach.call(document.querySelectorAll("#dlgItemEdit .ai-filled"),
+      function(el){ el.classList.remove("ai-filled"); });
+  }
+  function aiNote(msg, isErr){
+    var n = $("ieAi");
+    n.hidden = !msg; n.textContent = msg || "";
+    n.classList.toggle("is-err", !!isErr);
+  }
+  function aiReady(){
+    var on = !!(S.sample && S.sampleImg);
+    $("ieAiHint").textContent = on
+      ? "A pasted label, box or serial plate fills in the fields below."
+      : "Paste or add a photo of the label, box or serial plate.";
+  }
+
+  function openItem(id){
+    var it = itemById(id);
+    if(!it) return;
+    ctx.item = it; ctx.isNew = false; ctx.draft = null;
+    showItemDialog(it);
+  }
+  function openNewItem(){
+    if(S.readOnly) return;
+    ctx.item = null; ctx.isNew = true;
+    var room = $("invRoom").value;
+    ctx.draft = {photos:[], recall:null, kind:"", room:(room && room !== "__none") ? room : ""};
+    showItemDialog(ctx.draft);
+  }
+  function showItemDialog(it){
+    var isNew = ctx.isNew;
+    $("ieTitle").textContent = isNew ? "New item" : it.name;
+    $("ieSub").textContent = isNew ? "Something in the house"
+      : [it.make, it.category, it.room].filter(Boolean).join(" · ");
+    $("ieName").value = it.name || "";
+    $("ieMake").value = it.make || "";
+    $("ieModel").value = it.modelNo || "";
+    $("ieModelName").value = it.model || "";
+    $("ieCat").value = it.category || "";
+    $("ieBought").value = it.purchased || "";
+    $("ieWEnds").value = it.warrantyEnds || "";
+    $("ieWText").value = it.warrantyText || "";
+    $("ieSerial").value = it.serial || "";
+    $("ieBoughtAt").value = it.boughtAt || "";
+    $("ieNotes").value = it.notes || "";
+    $("ieLife").checked = !!it.lifetime;
+    $("ieSold").checked = !!it.sold;
+    $("ieSoldWrap").hidden = isNew;
+    fillRooms(it.room);
+    clearAiMarks(); aiNote(""); aiReady();
+
+    $("iePhotoWrap").hidden = !S.store;
+    renderPhotos();
+    $("ieDelete").hidden = isNew || S.readOnly;
+    $("ieDelete").disarm();
+    $("ieRecallBtn").hidden = S.readOnly || !S.sample;
+    $("ieRecallBtn").disabled = false;
+    $("ieRecallBtn").textContent = "Recall check now";
+    renderRecall(it.recall);
+    fillChoreLink(it.choreAssetId || "");
+    renderChores();
+
+    var extra = "";
+    if(it.links && it.links.length){
+      extra += '<p style="margin:4px 0 0">' + it.links.map(function(u){
+        return '<a href="' + esc(u) + '" target="_blank" rel="noopener">' +
+          esc(u.replace(/^https?:\/\//, "").slice(0, 44)) + "…</a>";
+      }).join("<br>") + "</p>";
+    }
+    $("ieExtra").innerHTML = extra;
+
+    $("dlgItemEdit").returnValue = "";
+    $("dlgItemEdit").showModal();
+    if(isNew) $("iePaste").focus();
+  }
+
+  /* Inventory items can point at a chore item. The dialog shows that
+     schedule read-only; editing it happens on the Chores tab. */
+  function fillChoreLink(cur){
+    var opts = assetsSorted().map(function(a){
+      return '<option value="' + esc(a.id) + '">' + esc(a.name) +
+        (a.group ? " (" + esc(a.group) + ")" : "") + "</option>";
+    }).join("");
+    $("ieChoreLink").innerHTML = '<option value="">— Not linked —</option>' +
+      '<option value="__new">+ New chore item from this…</option>' + opts;
+    $("ieChoreLink").value = assetById(cur) ? cur : "";
+    $("ieChoreLink").disabled = S.readOnly;
+  }
+  function renderChores(){
+    if($("ieChoreLink").value === "__new"){
+      $("ieChoreGo").hidden = true;
+      $("ieChores").innerHTML = '<div class="ai-note">A chore item named “' +
+        esc($("ieName").value.trim() || "this item") +
+        '” will be created when you save, and its first task opens next.</div>';
+      return;
+    }
+    var a = assetById($("ieChoreLink").value), h = "";
+    $("ieChoreGo").hidden = !a;
+    if(!a){
+      $("ieChores").innerHTML = '<span class="shots-empty">No chore schedule linked.</span>';
+      return;
+    }
+    var ts = tasksFor(a.id);
+    if(a.unit && a.reading != null){
+      h += '<p class="chore-odo">' + num(a.reading) + " " + esc(a.unit) + " as of " + fmtDate(a.readingDate) + "</p>";
+    }
+    if(!ts.length){
+      h += '<span class="shots-empty">' + esc(a.name) + " has no tasks yet.</span>";
+    } else {
+      h += '<ul class="hist chore-list">' + ts.map(function(t){
+        var st = statusOf(t, a), timed = t.intervalMiles > 0 || t.intervalDays > 0;
+        return "<li><span class='chip s-" + st.state + "'>" + esc(timed ? st.label : "Log") + "</span>" +
+          "<span class='n'><b>" + esc(t.name) + "</b><br><span class='cm'>" +
+          esc(lastLabel(t, a) + " · " + intervalLabel(t, a) + (st.dueLabel ? " · " + st.dueLabel : "")) +
+          "</span></span><span class='r'>" + esc(timed ? st.amt : "") + "</span></li>";
+      }).join("") + "</ul>";
+    }
+    $("ieChores").innerHTML = h;
+  }
+  $("ieChoreLink").addEventListener("change", renderChores);
+  $("ieName").addEventListener("input", function(){
+    if($("ieChoreLink").value === "__new") renderChores();
+  });
+  $("ieChoreGo").addEventListener("click", function(){
+    var id = $("ieChoreLink").value, dlg = $("dlgItemEdit");
+    if(!id) return;
+    if(!S.readOnly){
+      var form = dlg.querySelector("form");
+      if(!form.checkValidity()){ form.reportValidity(); return; }
+      dlg.close("save");                  /* keep anything typed here */
+    } else dlg.close("cancel");
+    showTab("chores");
+    setTimeout(function(){
+      var p = document.querySelector('[data-panel="' + id + '"]');
+      if(!p) return;
+      p.scrollIntoView({behavior:"smooth", block:"start"});
+      p.classList.remove("flash"); void p.offsetWidth; p.classList.add("flash");
+      setTimeout(function(){ p.classList.remove("flash"); }, 1700);
+    }, 60);
+  });
+
+  /* A new chore item inherits the area its room belongs to, so the panel
+     lands beside its neighbors instead of in "Other". */
+  function choreGroupFor(room){
+    if(room === "Outside") return "Outdoor & Water";
+    if(room === "Garage") return "Shop & Gear";
+    return "Home";
+  }
+  /* Built from what the inventory record already knows, so the panel arrives
+     named and specced rather than blank. */
+  function createChoreFor(f){
+    var specs = [];
+    if(f.modelNo || f.model) specs.push({k:"Model", v:f.modelNo || f.model});
+    if(f.serial) specs.push({k:"S/N", v:f.serial});
+    if(f.warrantyText) specs.push({k:"Warranty", v:f.warrantyText});
+    if(f.purchased) specs.push({k:"Purchased", v:fmtDate(f.purchased)});
+    var asId = newId("as");
+    var body = {
+      name: f.name || "Untitled",
+      group: choreGroupFor(f.room),
+      kind: f.category || "",
+      unit: "", reading: null, readingDate: "",
+      specs: specs, stored: false,
+      order: (S.assets.length + 1) * 10
+    };
+    return save("assets/" + asId, body).then(function(){
+      /* The snapshot has not come back yet and openTask needs the name now. */
+      if(!assetById(asId)) S.assets.push(Object.assign({id:asId}, body));
+      return asId;
+    });
+  }
+
+  /* The recall block: what the last check said, when, and a link to the
+     official search so the answer can be verified. */
+  function renderRecall(rec){
+    var h = "";
+    if(rec){
+      var calm = rec.status !== "action";
+      h += '<div class="recall-banner" style="margin:0' +
+        (calm ? ";border-color:var(--rule-2);background:var(--panel-2)" : "") + '">' +
+        '<h3 style="' + (calm ? "color:" + (rec.status === "cleared" ? "var(--green)" : "var(--amber)") : "") + '">' +
+        esc(rec.headline || "") + "</h3>" +
+        (rec.detail ? "<p>" + esc(rec.detail) + "</p>" : "") +
+        (rec.todo ? '<p class="todo">▸ ' + esc(rec.todo) + "</p>" : "") +
+        (rec.url ? '<p class="todo"><a href="' + esc(rec.url) +
+          '" target="_blank" rel="noopener">CPSC ' + esc(rec.recallNumber || "notice") + "</a></p>" : "") +
+        "</div>";
+    } else {
+      h += '<span class="shots-empty">Not checked yet.</span>';
+    }
+    var q = encodeURIComponent([$("ieMake").value, $("ieModel").value || $("ieModelName").value]
+      .map(function(s){ return String(s || "").trim(); }).filter(Boolean).join(" "));
+    h += '<p style="margin:6px 0 0"><a href="https://www.cpsc.gov/Recalls?search_api_fulltext=' +
+      q + '" target="_blank" rel="noopener">Search CPSC recalls for this item ↗</a></p>';
+    $("ieRecall").innerHTML = h;
+    $("ieRecallAsof").textContent = (rec && rec.checkedAt) ? "last checked " + fmtDate(rec.checkedAt) : "";
+    $("ieRecallOk").hidden = S.readOnly || ctx.isNew || !rec || rec.status === "cleared";
+  }
+
+  /* ---------- photos ---------- */
+  function curPhotos(){ return (ctx.isNew ? ctx.draft.photos : (ctx.item && ctx.item.photos)) || []; }
+  function renderPhotos(){
+    var ps = curPhotos();
+    $("iePhotos").innerHTML = ps.length
+      ? ps.map(function(p, i){
+          return '<div class="shot"><img src="' + esc(p.url) + '" alt="Photo ' + (i + 1) +
+            '" data-zoom="' + esc(p.url) + '">' +
+            '<button type="button" data-unshot="' + i + '" title="Remove">×</button></div>';
+        }).join("")
+      : '<span class="shots-empty">No photos yet.</span>';
+  }
+  function addPhoto(blob){
+    if(!blob || !(ctx.item || ctx.isNew)) return;
+    if(!S.store){ toast("Photos aren't available in this view."); return; }
+    var isNew = ctx.isNew, it = ctx.item, draft = ctx.draft;
+    /* Read the picture while it uploads — the two don't depend on each other. */
+    identify(blob);
+    toast("Uploading…");
+    S.store.upload(blob).then(function(res){
+      var shot = {id:res.id, url:res.url};
+      if(isNew){
+        draft.photos.push(shot);
+        if(ctx.draft === draft) renderPhotos();
+        toast("Photo attached");
+        return;
+      }
+      var ps = (it.photos || []).concat([shot]);
+      return save("inventory/" + it.id, Object.assign(stripId(it), {photos:ps}))
+        .then(function(){ it.photos = ps; if(ctx.item === it) renderPhotos(); toast("Photo added"); });
+    }).catch(function(e){
+      toast(e && e.code === "too_large" ? "That image is too big." : "Upload failed.");
+    });
+  }
+
+  /* ---------- read a label with Claude ---------- */
+  var ICON_KEYS = Object.keys(ICONS);
+  var FIELD_MAP = [
+    ["name", "ieName"], ["make", "ieMake"], ["modelNo", "ieModel"], ["model", "ieModelName"],
+    ["serial", "ieSerial"], ["category", "ieCat"], ["purchased", "ieBought"],
+    ["warrantyEnds", "ieWEnds"], ["warrantyText", "ieWText"], ["boughtAt", "ieBoughtAt"]
+  ];
+  var aiCtl = null;
+  function identify(blob){
+    if(!S.sample || !S.sampleImg || S.readOnly) return;
+    if(!/^image\/(jpeg|png|webp|gif)$/.test(blob.type || "")) return;
+    var dlg = $("dlgItemEdit"), token = {};
+    ctx.aiToken = token;
+    if(aiCtl) aiCtl.abort();
+    aiCtl = new AbortController();
+    var cats = [];
+    S.inv.forEach(function(x){ if(x.category && cats.indexOf(x.category) < 0) cats.push(x.category); });
+    var known = {};
+    FIELD_MAP.forEach(function(f){ var v = $(f[1]).value.trim(); if(v) known[f[0]] = v; });
+    var prompt =
+      "This photo is of a household item, or its box, receipt, label or serial plate, being added to a " +
+      "home inventory. Read what is actually visible and identify the item.\n\n" +
+      "Reply with only one JSON object with these keys (use \"\" for anything you cannot read or reasonably tell):\n" +
+      '{"name": short everyday name, e.g. "Bosch dishwasher" or "LG 55\\" OLED TV",\n' +
+      ' "make": brand/manufacturer,\n' +
+      ' "modelNo": model number exactly as printed,\n' +
+      ' "model": marketing model/series name,\n' +
+      ' "serial": serial number exactly as printed (never guess),\n' +
+      ' "category": one short category — reuse one of these if it fits: ' + JSON.stringify(cats.slice(0, 60)) + ',\n' +
+      ' "kind": one icon key from ' + JSON.stringify(ICON_KEYS) + ',\n' +
+      ' "room": the room it most likely lives in, only if obvious, from ' + JSON.stringify(knownRooms()) + ' else "",\n' +
+      ' "purchased": purchase date YYYY-MM-DD only if a receipt/date is visible,\n' +
+      ' "warrantyText": warranty terms if printed, e.g. "1 year parts & labor",\n' +
+      ' "warrantyEnds": YYYY-MM-DD only if a purchase date and warranty length are both visible,\n' +
+      ' "boughtAt": store name only if a receipt is visible,\n' +
+      ' "notes": one short line of anything else useful (manufacture date, capacity, voltage), or ""}\n\n' +
+      (Object.keys(known).length ? "Already entered by the owner (keep consistent): " + JSON.stringify(known) + "\n" : "");
+    aiNote("Reading the picture…");
+    S.sample.json(prompt, {images: blob, signal: aiCtl.signal}).then(function(r){
+      if(ctx.aiToken !== token || !dlg.open || !r || typeof r !== "object") return;
+      var filled = [];
+      FIELD_MAP.forEach(function(f){
+        var v = r[f[0]]; if(v == null) return;
+        v = String(v).trim(); if(!v) return;
+        if(/^(purchased|warrantyEnds)$/.test(f[0]) && !/^\d{4}-\d{2}-\d{2}$/.test(v)) return;
+        var el = $(f[1]);
+        if(el.value.trim()) return;             /* never overwrite what's there */
+        el.value = v; el.classList.add("ai-filled"); filled.push(f[0]);
+      });
+      if(r.notes && !$("ieNotes").value.trim()){
+        $("ieNotes").value = String(r.notes).trim(); filled.push("notes");
+      }
+      var rm = String(r.room || "").trim();
+      if(rm && !$("ieRoom").value && knownRooms().indexOf(rm) >= 0){
+        $("ieRoom").value = rm; $("ieRoom").classList.add("ai-filled"); filled.push("room");
+      }
+      var kind = String(r.kind || "").trim();
+      if(ICONS[kind]){
+        if(ctx.isNew) ctx.draft.kind = kind;
+        else if(ctx.item && !ctx.item.kind) ctx.item.kind = kind;
+      }
+      aiNote(filled.length
+        ? "Filled in " + filled.join(", ").replace(/modelNo/, "model #") + " from the picture — check before saving."
+        : "Read the picture, but found nothing new to fill in.");
+    }).catch(function(e){
+      if(ctx.aiToken !== token) return;
+      var c = e && e.code;
+      if(c === "cancelled") return;
+      if(c === "not_granted" || c === "sampling_disabled" || c === "images_unavailable" ||
+         c === "capability_disabled" || c === "not_declared" || c === "capability_removed"){
+        S.sampleImg = false; aiReady(); aiNote("");
+        return;
+      }
+      aiNote(c === "rate_limited" ? "Too many requests just now — the photo is attached; fill in by hand or try again shortly."
+        : "Couldn't read that picture — it's still attached. Fill in by hand.", true);
+    });
+  }
+
+  /* ---------- recall check ---------- */
+  function formItem(){
+    return {name:$("ieName").value.trim(), make:$("ieMake").value.trim(),
+      modelNo:$("ieModel").value.trim(), model:$("ieModelName").value.trim(),
+      serial:$("ieSerial").value.trim(), purchased:$("ieBought").value || "",
+      category:$("ieCat").value.trim()};
+  }
+  /* Asks Claude what it knows of CPSC recalls for this make and model.
+     Resolves a recall record; never writes. */
+  function checkRecall(f){
+    if(!S.sample) return Promise.reject({code:"not_granted"});
+    if(!f.make && !f.modelNo && !f.model) return Promise.reject({code:"no_model"});
+    var prompt =
+      "Check for U.S. product safety recalls (CPSC, and NHTSA/FDA where relevant) that cover this household item:\n" +
+      JSON.stringify(f) + "\n\n" +
+      "Only report a recall you are confident is real and matches this make and model (and serial/date range if known). " +
+      "Do not invent recall numbers or URLs. Reply with only one JSON object:\n" +
+      '{"status": "action" if a recall clearly covers this model, "check" if a recall may cover it ' +
+      '(e.g. depends on serial or build date, or the model match is uncertain), "cleared" if you know of none,\n' +
+      ' "headline": short title, e.g. "Recall: fire hazard" or "No recalls found",\n' +
+      ' "detail": 1–2 sentences — what the hazard is and which units, or for cleared say none are known as of your knowledge,\n' +
+      ' "todo": one line on what the owner should do (for cleared: "Nothing to do; re-check occasionally"),\n' +
+      ' "recallNumber": the CPSC recall number only if you are sure, else "",\n' +
+      ' "url": the official recall page only if you are sure of the exact URL, else ""}';
+    return S.sample.json(prompt, {cache:false}).then(function(r){
+      if(!r || typeof r !== "object") throw {code:"invalid_json"};
+      var st = /^(action|check|cleared)$/.test(r.status) ? r.status : "check";
+      var url = String(r.url || "").trim();
+      if(url && !/^https:\/\/(www\.)?(cpsc|saferproducts|nhtsa|fda)\.gov\//i.test(url)) url = "";
+      return {status:st, headline:String(r.headline || (st === "cleared" ? "No recalls found" : "Possible recall")),
+        detail:String(r.detail || ""), todo:String(r.todo || ""),
+        recallNumber:String(r.recallNumber || ""), url:url,
+        checkedAt:todayISO(), source:"Claude", dismissed:false};
+    });
+  }
+  function recallMsg(e){
+    var c = e && e.code;
+    if(c === "no_model") return "Add a make or model first, then check.";
+    if(c === "not_granted" || c === "sampling_disabled") return "Recall check needs permission to ask Claude.";
+    if(c === "rate_limited") return "Too many requests just now — try again shortly.";
+    return "Recall check didn't finish — try again.";
+  }
+  $("ieRecallBtn").addEventListener("click", function(){
+    var btn = $("ieRecallBtn"), isNew = ctx.isNew, it = ctx.item, draft = ctx.draft;
+    btn.disabled = true; btn.textContent = "Checking…";
+    checkRecall(formItem()).then(function(rec){
+      if(isNew){ draft.recall = rec; }
+      else {
+        return applyCheck(it, rec);
+      }
+      return rec;
+    }).then(function(rec){
+      if((isNew ? ctx.draft === draft : ctx.item === it) && $("dlgItemEdit").open) renderRecall(rec);
+      toast(checkToast(rec));
+    }).catch(function(e){ toast(recallMsg(e)); })
+      .then(function(){ btn.disabled = false; btn.textContent = "Recall check now"; });
+  });
+  $("ieRecallOk").addEventListener("click", function(){
+    var it = ctx.item;
+    if(ctx.isNew || !it || !it.recall) return;
+    var rec = clearedByOwner(it.recall);
+    setRecall(it, rec).then(function(){
+      it.recall = rec;
+      if(ctx.item === it && $("dlgItemEdit").open) renderRecall(rec);
+      toast("Cleared — marked as checked by you");
+    }).catch(function(){});
+  });
+
+  /* ================= RECALLS ================= */
+
+  /* A finding is open while it still wants a decision: a recall that covers
+     the item ("action") or might ("check"), not yet dismissed. */
+  function recOpen(it){
+    return !!(it.recall && !it.sold && !it.recall.dismissed &&
+      (it.recall.status === "action" || it.recall.status === "check"));
+  }
+  function recBadge(){
+    var n = S.inv.filter(recOpen).length;
+    $("recN").textContent = n ? n : "";
+  }
+  function setRecall(it, rec){
+    return save("inventory/" + it.id, Object.assign(stripId(it), {recall:rec}));
+  }
+  /* The owner looked and the item is not affected. The finding is kept under
+     "was", so it can be reopened and so the record shows what was ruled out. */
+  function clearedByOwner(prev){
+    return {status:"cleared", headline:"Checked by you — not affected",
+      detail:"Flagged as: " + (prev.headline || "possible recall") + ".", todo:"",
+      recallNumber:prev.recallNumber || "", url:prev.url || "",
+      checkedAt:todayISO(), source:"You", dismissed:false, owner:true,
+      was:{status:prev.status || "check", headline:prev.headline || "", detail:prev.detail || "",
+           todo:prev.todo || "", source:prev.source || "", checkedAt:prev.checkedAt || ""}};
+  }
+  function reopened(rec){
+    var w = rec.was || {};
+    return {status:w.status || "check", headline:w.headline || "Possible recall", detail:w.detail || "",
+      todo:w.todo || "", recallNumber:rec.recallNumber || "", url:rec.url || "",
+      checkedAt:w.checkedAt || rec.checkedAt || "", source:w.source || "", dismissed:false};
+  }
+  /* Folds a fresh answer from Claude into what is already on record. Claude is
+     answering from memory, so it never overrules better evidence:
+       - what the owner cleared stays cleared unless a recall clearly covers it;
+       - an open finding that came from the official lists is never cleared by
+         a "none known" — only the owner can close that;
+       - a dismissed notice stays dismissed while the verdict is the same. */
+  function applyCheck(it, rec){
+    var prev = it.recall;
+    if(prev && prev.owner && rec.status !== "action"){
+      rec = Object.assign({}, prev, {checkedAt:rec.checkedAt});
+    } else if(prev && prev.status !== "cleared" && prev.source && prev.source !== "Claude" && rec.status === "cleared"){
+      rec = Object.assign({}, prev, {kept:true});
+    } else if(prev && prev.dismissed && prev.status === rec.status){
+      rec.dismissed = true;
+    }
+    var stored = Object.assign({}, rec); delete stored.kept;
+    return setRecall(it, stored).then(function(){ it.recall = stored; return rec; });
+  }
+  function checkToast(rec){
+    if(rec.kept) return "Still open — this one came from the official list, so only you can clear it";
+    if(rec.owner) return "Nothing new — still cleared by you";
+    return rec.status === "cleared" ? "No recalls found" : rec.headline;
+  }
+  function askFor(it){
+    return {name:it.name || "", make:it.make || "", modelNo:it.modelNo || "", model:it.model || "",
+      serial:it.serial || "", purchased:it.purchased || "", category:it.category || ""};
+  }
+  function recheck(it){
+    return checkRecall(askFor(it)).then(function(rec){ return applyCheck(it, rec); });
+  }
+  function hasModel(it){ return !!(it.make || it.modelNo || it.model); }
+
+  /* Works through everything not yet checked, one at a time, and stops itself
+     if Claude asks it to slow down. */
+  function checkAll(){
+    if(S.recRun){ S.recRun.stop = true; return; }
+    var todo = S.inv.filter(function(it){ return !it.sold && !it.recall && hasModel(it); })
+                    .map(function(it){ return it.id; });
+    if(!todo.length) return;
+    var run = S.recRun = {i:0, n:todo.length, stop:false, found:0, why:""};
+    function next(){
+      if(run.stop || run.i >= todo.length){
+        S.recRun = null; renderRec();
+        toast(run.why || ("Checked " + run.i + " — " + (run.found ? run.found + " to look at" : "nothing found")));
+        return;
+      }
+      var it = itemById(todo[run.i]); run.i++;
+      if(!it || it.recall) return next();
+      S.recBusy[it.id] = 1; renderRec();
+      recheck(it).then(function(rec){ if(rec.status !== "cleared") run.found++; })
+        .catch(function(e){ run.stop = true; run.i--; run.why = recallMsg(e); })
+        .then(function(){ delete S.recBusy[it.id]; next(); });
+    }
+    next();
+  }
+
+  function renderRec(){
+    if(!S.ready) return;
+    recBadge();
+    $("tally").hidden = true;
+    var live = S.inv.filter(function(it){ return !it.sold; });
+    var open = live.filter(recOpen).sort(function(a, b){
+      return (a.recall.status === "action" ? 0 : 1) - (b.recall.status === "action" ? 0 : 1);
+    });
+    var hush = live.filter(function(it){ return it.recall && it.recall.dismissed && it.recall.status !== "cleared"; });
+    var mine = live.filter(function(it){ return it.recall && it.recall.status === "cleared" && it.recall.owner; });
+    var auto = live.filter(function(it){ return it.recall && it.recall.status === "cleared" && !it.recall.owner; });
+    var none = live.filter(function(it){ return !it.recall; });
+    var canAsk = !S.readOnly && !!S.sample;
+    $("sub").textContent = open.length + " to look at · " + (mine.length + auto.length) +
+      " clear · " + none.length + " not checked";
+
+    function who(it){
+      var sub = [it.make, it.modelNo || it.model].filter(Boolean).join(" ");
+      return "<b>" + esc(it.name) + "</b>" + (sub ? " · " + esc(sub) : "") + (it.room ? " · " + esc(it.room) : "");
+    }
+    function asof(r){
+      return (r.checkedAt ? "checked " + fmtDate(r.checkedAt) : "") + (r.source ? " · " + esc(r.source) : "");
+    }
+    function again(it, label){
+      if(!canAsk) return "";
+      if(!hasModel(it)) return '<span>needs a make or model</span>';
+      return '<button class="btn btn--sm" data-rc-again="' + esc(it.id) + '"' +
+        (S.recBusy[it.id] || S.recRun ? " disabled" : "") + ">" +
+        (S.recBusy[it.id] ? "Checking…" : label) + "</button>";
+    }
+    function card(it, hushed){
+      var r = it.recall;
+      return '<div class="rc-card' + (hushed ? " is-hushed" : (r.status === "action" ? " is-action" : "")) + '">' +
+        "<h3>" + esc(r.headline || "Possible recall") + "</h3>" +
+        '<p class="who">' + who(it) + (asof(r) ? " · " + asof(r) : "") + "</p>" +
+        (r.detail ? "<p>" + esc(r.detail) + "</p>" : "") +
+        (r.todo || r.url ? '<p class="todo">' + (r.todo ? "▸ " + esc(r.todo) : "") +
+          (r.url ? (r.todo ? " · " : "") + '<a href="' + esc(r.url) + '" target="_blank" rel="noopener">' +
+            "Official notice " + esc(r.recallNumber || "") + " ↗</a>" : "") + "</p>" : "") +
+        '<div class="rc-acts">' +
+        (S.readOnly ? "" :
+          '<button class="btn btn--sm btn--primary" data-rc-clear="' + esc(it.id) + '">I checked — clear it</button>') +
+        again(it, "Check again") +
+        (S.readOnly ? "" : (hushed
+          ? '<button class="btn btn--sm btn--ghost" data-undismiss="' + esc(it.id) + '">Restore</button>'
+          : '<button class="btn btn--sm btn--ghost" data-dismiss="' + esc(it.id) + '">Dismiss</button>')) +
+        '<button class="btn btn--sm btn--ghost" data-item="' + esc(it.id) + '">Open item</button>' +
+        "</div></div>";
+    }
+    function head(label, n, extra){
+      return '<div class="inv-grp"><span>' + esc(label) + '</span><span class="gn" style="font-family:var(--f-mono);' +
+        'font-size:10px;letter-spacing:.04em">' + n + "</span>" + (extra || "") + "</div>";
+    }
+    function rows(list, right){
+      return '<ul class="inv-list">' + list.map(function(it){
+        var sub = [it.make, it.modelNo || it.model].filter(Boolean).join(" · ");
+        return '<li class="rc-row"><span class="nm"><b>' + esc(it.name) + "</b><span>" +
+          esc(sub || "no make or model on file") + (it.room ? " · " + esc(it.room) : "") +
+          "</span></span>" + '<span class="rt">' + right(it) + "</span></li>";
+      }).join("") + "</ul>";
+    }
+
+    var h = '<p class="rc-lead">Recall findings for everything in the inventory. Clear one once you have ' +
+      "looked at the item yourself; a cleared item stays cleared unless a recall clearly covers it.</p>";
+
+    h += head("To look at", open.length);
+    h += open.length ? open.map(function(it){ return card(it, false); }).join("")
+      : '<div class="rc-none"><b>Nothing open.</b> Every finding has been cleared or dismissed.</div>';
+
+    if(hush.length){
+      h += head("Dismissed, not cleared", hush.length);
+      h += hush.map(function(it){ return card(it, true); }).join("");
+    }
+    if(mine.length){
+      h += head("Cleared by you", mine.length);
+      h += rows(mine, function(it){
+        var w = it.recall.was || {};
+        return "<span>" + esc(w.headline ? "was: " + w.headline : "") + "</span><span>" +
+          fmtDate(it.recall.checkedAt) + "</span>" +
+          (S.readOnly ? "" : '<button class="btn btn--sm btn--ghost" data-rc-reopen="' + esc(it.id) + '">Reopen</button>') +
+          '<button class="btn btn--sm btn--ghost" data-item="' + esc(it.id) + '">Open</button>';
+      });
+    }
+    if(auto.length){
+      h += head("No recalls found", auto.length);
+      h += rows(auto, function(it){
+        return "<span>" + asof(it.recall) + "</span>" + again(it, "Check again");
+      });
+    }
+    if(none.length){
+      var ready = none.filter(hasModel).length, run = S.recRun;
+      h += head("Not checked yet", none.length,
+        (run ? '<span class="rc-run">checking ' + Math.min(run.i, run.n) + " of " + run.n + "…</span>" : "") +
+        (canAsk && ready ? '<button class="btn btn--sm" data-rc-all="1">' +
+          (run ? "Stop" : "Check all " + ready) + "</button>" : "") +
+        '<button class="btn btn--sm btn--ghost" data-rc-more="1">' + (S.recMore ? "Hide list" : "Show list") + "</button>");
+      if(!canAsk && !S.readOnly) h += '<p class="rc-lead" style="margin-top:0">Automatic recall checks need Claude, so they do not run here. Each item&rsquo;s window has a link to the CPSC recall search.</p>';
+      if(S.recMore || run) h += rows(none, function(it){ return again(it, "Check"); });
+    }
+    $("viewRec").innerHTML = h;
+  }
+
+  /* The clipboard API is often blocked inside the viewer's frame; ⌘V/Ctrl+V
+     into the dialog always works, so fall back to that. */
+  $("iePaste").addEventListener("click", function(){
+    var cb = navigator.clipboard;
+    if(!cb || !cb.read){ toast("Press Ctrl+V (⌘V on Mac) to paste the picture."); return; }
+    cb.read().then(function(items){
+      for(var i = 0; i < items.length; i++){
+        var t = items[i].types.filter(function(x){ return x.indexOf("image/") === 0; })[0];
+        if(t) return items[i].getType(t).then(function(b){
+          addPhoto(b.type ? b : new Blob([b], {type:t}));
+          return true;
+        });
+      }
+      return false;
+    }).then(function(got){
+      if(got === false) toast("No picture on the clipboard — copy one first.");
+    }).catch(function(){
+      toast("Press Ctrl+V (⌘V on Mac) to paste the picture.");
+    });
+  });
+  $("iePhotoAdd").addEventListener("click", function(){ $("iePhotoFile").click(); });
+  $("iePhotoFile").addEventListener("change", function(e){
+    Array.prototype.slice.call(e.target.files || []).forEach(addPhoto);
+    e.target.value = "";
+  });
+  $("dlgItemEdit").addEventListener("paste", function(e){
+    var list = (e.clipboardData && e.clipboardData.items) || [];
+    for(var i = 0; i < list.length; i++){
+      if(String(list[i].type).indexOf("image") === 0){
+        e.preventDefault();
+        addPhoto(list[i].getAsFile());
+        return;
+      }
+    }
+  });
+  $("iePhotos").addEventListener("click", function(e){
+    var z = e.target.closest("[data-zoom]");
+    if(z){ window.open(z.dataset.zoom, "_blank", "noopener"); return; }
+    var rm = e.target.closest("[data-unshot]");
+    if(!rm) return;
+    var i = Number(rm.dataset.unshot);
+    if(ctx.isNew){
+      var g = ctx.draft.photos.splice(i, 1)[0];
+      renderPhotos();
+      if(g && S.store && S.store.delete) S.store.delete(g.id).catch(function(){});
+      return;
+    }
+    var it = ctx.item;
+    var ps = (it.photos || []).slice(), gone = ps.splice(i, 1)[0];
+    save("inventory/" + it.id, Object.assign(stripId(it), {photos:ps})).then(function(){
+      it.photos = ps; renderPhotos();
+      if(gone && S.store && S.store.delete) S.store.delete(gone.id).catch(function(){});
+    }).catch(function(){});
+  });
+
+  $("ieRoom").addEventListener("change", function(){
+    var other = $("ieRoom").value === "__other";
+    $("ieRoomNew").hidden = !other;
+    if(other) $("ieRoomNew").focus();
+  });
+  ["ieMake", "ieModel", "ieModelName"].forEach(function(id){
+    $(id).addEventListener("change", function(){
+      renderRecall(ctx.isNew ? ctx.draft.recall : (ctx.item && ctx.item.recall));
+    });
+  });
+  Array.prototype.forEach.call(document.querySelectorAll("#dlgItemEdit input, #dlgItemEdit select"),
+    function(el){ el.addEventListener("input", function(){ el.classList.remove("ai-filled"); }); });
+
+  armDelete($("ieDelete"), function(){
+    var it = ctx.item; if(!it) return;
+    $("dlgItemEdit").close("deleted");
+    S.db.doc("inventory/" + it.id).delete()
+      .then(function(){ toast("Deleted " + it.name); }).catch(fail);
+  });
+
+  /* A guess at the icon from the category, when Claude didn't pick one. */
+  function kindFor(cat, name){
+    var s = (cat + " " + name).toLowerCase();
+    var rules = [["laptop","laptop"],["desktop","desktop"],["pc","desktop"],["monitor","monitor"],["phone","phone"],
+      ["tv","tv"],["television","tv"],["speaker","audio"],["audio","audio"],["camera","camera"],["router","network"],
+      ["network","network"],["console","console"],["printer","printer"],["kitchen","kitchen"],["fridge","kitchen"],
+      ["refrigerator","kitchen"],["dishwasher","kitchen"],["oven","kitchen"],["microwave","kitchen"],["range","kitchen"],
+      ["washer","laundry"],["dryer","laundry"],["laundry","laundry"],["furnace","hvac"],["hvac","hvac"],["air","hvac"],
+      ["water","water"],["softener","water"],["heater","water"],["mower","yard"],["yard","yard"],["garden","yard"],
+      ["bike","bike"],["boat","boat"],["kayak","boat"],["tool","tool"],["drill","tool"],["saw","tool"],
+      ["furniture","furniture"],["vacuum","clean"],["clean","clean"],["fitness","fitness"],["treadmill","fitness"]];
+    for(var i = 0; i < rules.length; i++) if(s.indexOf(rules[i][0]) >= 0) return rules[i][1];
+    return "misc";
+  }
+
+  $("dlgItemEdit").addEventListener("close", function(){
+    var saved = $("dlgItemEdit").returnValue === "save";
+    if(aiCtl){ aiCtl.abort(); aiCtl = null; }
+    ctx.aiToken = null;
+    var isNew = ctx.isNew, draft = ctx.draft, it = ctx.item;
+    ctx.isNew = false;
+
+    if(!saved){
+      /* A cancelled new item leaves nothing behind, photos included. */
+      if(isNew && draft && S.store && S.store.delete){
+        draft.photos.forEach(function(p){ S.store.delete(p.id).catch(function(){}); });
+      }
+      return;
+    }
+    var choreSel = $("ieChoreLink").value, spawn = choreSel === "__new";
+    var fields = {
+      name: $("ieName").value.trim() || (it ? it.name : "Untitled"),
+      make: $("ieMake").value.trim(),
+      modelNo: $("ieModel").value.trim(),
+      model: $("ieModelName").value.trim(),
+      boughtAt: $("ieBoughtAt").value.trim(),
+      room: ($("ieRoom").value === "__other"
+        ? $("ieRoomNew").value.trim() : $("ieRoom").value.trim()),
+      category: $("ieCat").value.trim(),
+      purchased: $("ieBought").value || "",
+      warrantyEnds: $("ieWEnds").value || "",
+      warrantyText: $("ieWText").value.trim(),
+      serial: $("ieSerial").value.trim(),
+      notes: $("ieNotes").value.trim(),
+      box: (it && it.box) || "",
+      lifetime: $("ieLife").checked,
+      choreAssetId: spawn ? "" : (choreSel || "")
+    };
+
+    function saveExisting(){
+      if(!it) return Promise.resolve();
+      fields.sold = $("ieSold").checked;
+      return save("inventory/" + it.id, Object.assign(stripId(it), fields))
+        .then(function(){ if(!spawn) toast("Saved"); });
+    }
+
+    function saveNew(){
+      var maxOrder = S.inv.reduce(function(m, x){ return Math.max(m, x.order || 0); }, 0);
+      var body = Object.assign(fields, {
+        sold: false,
+        kind: draft.kind || kindFor(fields.category, fields.name),
+        photos: draft.photos,
+        recall: draft.recall || null,
+        order: maxOrder + 10,
+        added: todayISO()
+      });
+      var newIdv = newId("iv");
+      return save("inventory/" + newIdv, body).then(function(){
+        if(S.tab !== "inv" && !spawn) showTab("inv");
+        if(body.recall){ toast("Added " + body.name); return; }
+        if(!S.sample || !(body.make || body.modelNo || body.model)){ toast("Added " + body.name); return; }
+        /* Every new item gets a recall check on the way in. The check runs on
+           its own; it must not hold up the task dialog. */
+        toast("Added " + body.name + " — checking recalls…");
+        checkRecall(body).then(function(rec){
+          var cur = itemById(newIdv) || Object.assign({id:newIdv}, body);
+          return save("inventory/" + newIdv, Object.assign(stripId(cur), {recall:rec})).then(function(){
+            toast(rec.status === "cleared" ? body.name + " — no recalls found"
+              : body.name + " — " + rec.headline);
+          });
+        }).catch(function(e){ toast(recallMsg(e)); });
+      });
+    }
+
+    /* "+ New chore item from this" is settled first, so the item is written
+       once with its link already in place. */
+    (spawn ? createChoreFor(fields) : Promise.resolve(""))
+      .then(function(asId){
+        if(asId) fields.choreAssetId = asId;
+        return (isNew ? saveNew() : saveExisting()).then(function(){ return asId; });
+      })
+      .then(function(asId){
+        /* A chore item with no tasks does nothing, so go straight to its first. */
+        if(!asId) return;
+        toast("Chore item created — add its first task");
+        showTab("chores");
+        openTask(null, asId);
+      })
+      .catch(function(){});
+  });
+
+  function saveShut(){
+    try { localStorage.setItem("cf-shut", JSON.stringify(Object.keys(S.shut))); } catch(e){}
+  }
+  (function(){
+    try {
+      var raw = JSON.parse(localStorage.getItem("cf-shut") || "[]");
+      if(Array.isArray(raw)) raw.forEach(function(k){ S.shut[k] = 1; });
+    } catch(e){}
+  })();
+
+  /* ---------- tabs ---------- */
+  function showTab(which){
+    S.tab = which;
+    [["chores", "tabChores", "viewChores"], ["inv", "tabInv", "viewInv"],
+     ["rec", "tabRec", "viewRec"]].forEach(function(t){
+      $(t[1]).setAttribute("aria-selected", String(t[0] === which));
+      $(t[2]).hidden = t[0] !== which;
+    });
+    render();
+  }
+  $("tabChores").addEventListener("click", function(){ showTab("chores"); });
+  $("tabInv").addEventListener("click", function(){ showTab("inv"); });
+  $("tabRec").addEventListener("click", function(){ showTab("rec"); });
+  $("invSold").addEventListener("change", function(){ S.showSold = $("invSold").checked; renderInv(); });
+  ["invQ", "invRoom", "invCat", "invW"].forEach(function(id){
+    $(id).addEventListener("input", renderInv);
+  });
+
+  /* ---------- print sheet ---------- */
+  /* Page 1 rebuilds the garage board: a center column of categories with each
+     vehicle's entries flanking it. Page 2 is everything else, two-up. */
+  function normName(n){
+    return String(n).toLowerCase().replace(/\(.*?\)/g, "").replace(/[^a-z0-9]+/g, " ").trim();
+  }
+  function psCell(t, asset){
+    if(!t) return "";
+    var bits = [];
+    if(t.lastDate) bits.push(fmtDate(t.lastDate));
+    if(t.lastReading != null && asset.unit) bits.push(num(t.lastReading) + " " + asset.unit);
+    var extra = [];
+    if(t.note) extra.push(t.note);
+    if(t.intervalMiles > 0 || t.intervalDays > 0){
+      var st = statusOf(t, asset);
+      extra.push(intervalLabel(t, asset) + (st.dueLabel ? " · " + st.dueLabel : ""));
+    }
+    var trail = S.logs.filter(function(l){ return l.taskId === t.id && l.date !== t.lastDate; })
+      .sort(function(x, y){ return (y.ts || 0) - (x.ts || 0); })
+      .slice(0, 3).map(function(l){ return fmtDate(l.date); });
+    if(trail.length) extra.push("before that " + trail.join(" · "));
+    return '<div class="ps-val">' + esc(bits.join(" · ") || "—") + "</div>" +
+      (extra.length ? '<div class="ps-x">' + esc(extra.join(" · ")) + "</div>" : "");
+  }
+  function psVehicleGrid(A, B){
+    var rows = [], byKey = {};
+    function add(t, side){
+      var k = normName(t.name), r = byKey[k];
+      if(!r){ r = byKey[k] = {label:t.name, a:null, b:null}; rows.push(r); }
+      r[side] = t;
+    }
+    tasksFor(A.id).forEach(function(t){ add(t, "a"); });
+    if(B) tasksFor(B.id).forEach(function(t){ add(t, "b"); });
+
+    function head(x){
+      if(!x) return "<th></th>";
+      return "<th>" + esc(x.name) + "</th>";
+    }
+    function specLine(x){
+      if(!x || !x.specs) return "<td></td>";
+      var s = x.specs.filter(function(p){ return !/^odo reset$/i.test(p.k); })
+        .map(function(p){ return p.k + " " + p.v; }).join(" · ");
+      return '<td class="ps-spec">' + esc(s) + "</td>";
+    }
+    function odoLine(x){
+      if(!x || !x.unit) return "<td></td>";
+      return '<td class="ps-odo">' + num(x.reading) + " " + esc(x.unit) +
+        '<div class="ps-spec">as of ' + fmtDate(x.readingDate) + "</div></td>";
+    }
+    var h = '<table class="ps-grid"><thead>' +
+      "<tr>" + head(A) + '<th class="ps-cat"></th>' + head(B) + "</tr>" +
+      "<tr>" + specLine(A) + '<td class="ps-cat">Spec</td>' + specLine(B) + "</tr>" +
+      "<tr>" + odoLine(A) + '<td class="ps-cat">Odometer</td>' + odoLine(B) + "</tr>" +
+      "</thead><tbody>";
+    rows.forEach(function(r){
+      h += "<tr><td>" + psCell(r.a, A) + '</td><td class="ps-cat">' + esc(r.label) +
+        "</td><td>" + psCell(r.b, B) + "</td></tr>";
+    });
+    return h + "</tbody></table>";
+  }
+  function buildPrintSheet(){
+    var vehicles = assetsSorted().filter(function(a){ return (a.group || "") === "Vehicles"; });
+    var stamp = "Chore Factory · printed " + fmtDate(todayISO());
+    var h = "";
+
+    h += '<section class="ps-page"><h1 class="ps-h">Vehicle Maintenance Log</h1>' +
+      '<div class="ps-sub">' + esc(stamp) + "</div>";
+    if(!vehicles.length){
+      h += "<p>No vehicles tracked.</p>";
+    } else {
+      for(var i = 0; i < vehicles.length; i += 2){
+        h += psVehicleGrid(vehicles[i], vehicles[i + 1] || null);
+      }
+      var resets = [];
+      vehicles.forEach(function(v){
+        (v.specs || []).forEach(function(p){
+          if(/reset/i.test(p.k)) resets.push(v.name + " — " + p.k + ": " + p.v);
+        });
+      });
+      if(resets.length) h += '<div class="ps-foot">' + esc(resets.join("   |   ")) + "</div>";
+    }
+    h += "</section>";
+
+    h += '<section class="ps-page"><h1 class="ps-h">Home &amp; Property</h1>' +
+      '<div class="ps-sub">' + esc(stamp) + "</div><div class=\"ps-cols\">";
+    var order = [], byGroup = {}, STOW = "Off Season & Reference";
+    assetsSorted().forEach(function(a){
+      if((a.group || "") === "Vehicles") return;
+      var g = a.stored ? STOW : ((a.group || "Other").trim() || "Other");
+      if(!byGroup[g]){ byGroup[g] = []; order.push(g); }
+      byGroup[g].push(a);
+    });
+    var si = order.indexOf(STOW);
+    if(si > -1){ order.splice(si, 1); order.push(STOW); }
+    order.forEach(function(g){
+      h += '<div class="ps-grp">' + esc(g) + "</div>";
+      byGroup[g].forEach(function(a){
+        h += '<div class="ps-item"><h4>' + esc(a.name) + "</h4>";
+        if(a.specs && a.specs.length){
+          h += '<div class="ps-spec">' + esc(a.specs.map(function(p){
+            return p.k + " " + p.v;
+          }).join(" · ")) + "</div>";
+        }
+        var ts = tasksFor(a.id);
+        if(ts.length){
+          h += '<ul class="ps-tasks">';
+          ts.forEach(function(t){
+            var st = statusOf(t, a), right;
+            if(t.intervalMiles > 0 || t.intervalDays > 0){
+              right = (t.lastDate ? fmtDate(t.lastDate) : "—") + " → " +
+                (st.dueLabel || st.label);
+            } else {
+              right = t.lastDate ? fmtDate(t.lastDate) : "—";
+            }
+            h += "<li><span>" + esc(t.name) + '</span><span class="d">' + esc(right) + "</span></li>";
+          });
+          h += "</ul>";
+        }
+        h += "</div>";
+      });
+    });
+    h += "</div></section>";
+    $("printsheet").innerHTML = h;
+  }
+  /* The viewer sandbox blocks window.print(), so the PDF is drawn here and
+     handed to the download prompt. */
+  /* One shape for every vehicle entry: date and mileage on the first line,
+     everything else right-justified beneath it. `sub` names the entry when
+     several share a row, as front and rear pads share Brakes. */
+  function pdfEntry(t, asset, sub){
+    if(!t) return null;
+    var notes = [];
+    if(t.intervalMiles > 0 || t.intervalDays > 0){
+      var st = statusOf(t, asset);
+      notes.push(intervalLabel(t, asset) + (st.dueLabel ? "  ·  " + st.dueLabel : ""));
+    }
+    if(t.note) notes.push(t.note);
+    var trail = S.logs.filter(function(l){ return l.taskId === t.id && l.date !== t.lastDate; })
+      .sort(function(x, y){ return (y.ts || 0) - (x.ts || 0); })
+      .slice(0, 3).map(function(l){ return fmtDate(l.date); });
+    if(trail.length) notes.push("before that " + trail.join("  ·  "));
+    return {
+      sub: sub || "",
+      date: t.lastDate ? fmtDate(t.lastDate) : "—",
+      miles: (t.lastReading != null && asset.unit) ? num(t.lastReading) + " " + asset.unit : "",
+      notes: notes
+    };
+  }
+
+  function buildPdf(){
+    var ns = window.jspdf;
+    if(!ns || !ns.jsPDF) return null;
+    /* Page 1 is landscape so the board's two-sided grid gets real width. */
+    var doc = new ns.jsPDF({unit:"pt", format:"letter", orientation:"landscape"});
+    var M = 40, W = doc.internal.pageSize.getWidth();
+    var stamp = "Chore Factory  ·  " + fmtDate(todayISO());
+
+    function heading(title, width, size){
+      doc.setFont("helvetica", "bold"); doc.setFontSize(size || 17); doc.setTextColor(0);
+      doc.text(title.toUpperCase(), M, 52);
+      doc.setLineWidth(1.4); doc.setDrawColor(0); doc.line(M, 60, width - M, 60);
+      doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.setTextColor(120);
+      doc.text(stamp.toUpperCase(), M, 73);
+      doc.setTextColor(0);
+    }
+
+    /* ---- page 1: the board's own layout ---- */
+    heading("Vehicle Maintenance Log", W, 23);
+    var vehicles = assetsSorted().filter(function(a){ return (a.group || "") === "Vehicles"; });
+    var A = vehicles[0], B = vehicles[1];
+    var rows = [], byKey = {};
+    function add(t, side){
+      var k = t.pdfGroup ||
+        String(t.name).toLowerCase().replace(/\(.*?\)/g, "").replace(/[^a-z0-9]+/g, " ").trim();
+      if(!byKey[k]){ byKey[k] = {label:(t.pdfGroup || t.name), a:[], b:[]}; rows.push(byKey[k]); }
+      byKey[k][side].push(t);
+    }
+    if(A) tasksFor(A.id).forEach(function(t){ add(t, "a"); });
+    if(B) tasksFor(B.id).forEach(function(t){ add(t, "b"); });
+
+    function specOf(x){
+      if(!x || !x.specs) return "";
+      return x.specs.filter(function(p){ return !/reset/i.test(p.k); })
+        .map(function(p){ return p.k + " " + p.v; }).join("   ·   ");
+    }
+    function odoOf(x){
+      if(!x || !x.unit) return "";
+      return num(x.reading) + " " + x.unit + "\n" + fmtDate(x.readingDate);
+    }
+
+    var SIDE = (W - 2*M) * 0.375;
+    var draw = {};                              /* row index -> {col -> cell} */
+    var cells = rows.map(function(r){
+      function side(list, asset){
+        return list.map(function(t){
+          return pdfEntry(t, asset, t.name !== r.label ? t.name : "");
+        });
+      }
+      return {label:r.label, a:side(r.a, A), b:side(r.b, B)};
+    });
+
+    /* The whole log has to land on one page, so measure it at full size and
+       shrink only as far as it takes. */
+    var TOP = 90, BOT = 32, PAGE_H = doc.internal.pageSize.getHeight();
+    var AVAIL = PAGE_H - TOP - BOT;
+    var PAD, INNER, HEAD_SZ, NOTE_SZ, HEAD_LH, NOTE_LH, NAME_SZ, SPEC_SZ;
+
+    function setScale(s){
+      PAD = 7 * s; HEAD_SZ = 15 * s; NOTE_SZ = 10 * s;
+      HEAD_LH = 19 * s; NOTE_LH = 13 * s; NAME_SZ = 17 * s; SPEC_SZ = 11 * s;
+      INNER = SIDE - PAD * 2;
+    }
+    function stackHeight(list){
+      if(!list.length) return 0;
+      var h = 0;
+      list.forEach(function(e, i){
+        h += (e.sub ? NOTE_LH : 0) + HEAD_LH + e.wrapped.length * NOTE_LH;
+        if(i) h += NOTE_LH * 0.55;                        /* the divider's air */
+      });
+      return h;
+    }
+    function wrapAll(){
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(NOTE_SZ);
+      cells.forEach(function(c){
+        [c.a, c.b].forEach(function(list){
+          list.forEach(function(e){
+            e.wrapped = [];
+            e.notes.forEach(function(s){
+              e.wrapped = e.wrapped.concat(doc.splitTextToSize(s, INNER));
+            });
+          });
+        });
+        c.height = PAD * 2 + Math.max(stackHeight(c.a), stackHeight(c.b), HEAD_LH);
+      });
+    }
+    var resets = [];
+    vehicles.forEach(function(v){
+      (v.specs || []).forEach(function(p){
+        if(/reset/i.test(p.k)) resets.push(v.name + " — " + p.k + ": " + p.v);
+      });
+    });
+    var FOOT_H = resets.length ? 36 : 0;
+
+    function buildBody(){
+      draw = {};
+      var b = [
+        [specOf(A), "Spec", specOf(B)],
+        [odoOf(A), "Odometer", odoOf(B)]
+      ];
+      cells.forEach(function(c, i){
+        draw[i + 2] = {0:c.a, 2:c.b, h:c.height};
+        b.push([c.a.length ? " " : "", c.label, c.b.length ? " " : ""]);
+      });
+      return b;
+    }
+
+    var body;
+    /* Estimating the height was guesswork, and it was wrong. Lay the table into
+       a throwaway document and ask that how many pages it actually took. */
+    var scale = 1;
+    for(var pass = 0; pass < 14; pass++){
+      setScale(scale);
+      wrapAll();
+      body = buildBody();
+      var probe = new ns.jsPDF({unit:"pt", format:"letter", orientation:"landscape"});
+      renderTable(probe);
+      var fits = probe.internal.getNumberOfPages() === 1 &&
+        (probe.lastAutoTable.finalY + FOOT_H) < (PAGE_H - BOT);
+      if(fits || scale <= 0.5) break;
+      scale -= 0.05;
+    }
+    renderTable(doc);
+
+    function renderTable(target){
+      target.autoTable({
+      startY: TOP,
+      head: [[A ? A.name : "", "", B ? B.name : ""]],
+      body: body,
+      theme: "grid",
+      showHead: "firstPage",
+      margin: {left:M, right:M, bottom:BOT},
+      styles: {font:"helvetica", fontSize:SPEC_SZ, cellPadding:PAD, lineColor:[150,150,150],
+               lineWidth:0.6, textColor:[20,20,20], valign:"top"},
+      headStyles: {fillColor:[255,255,255], textColor:[0,0,0], fontSize:NAME_SZ,
+                   fontStyle:"bold", lineWidth:{bottom:1.6, top:0.6, left:0.6, right:0.6}},
+      columnStyles: {
+        0: {cellWidth:SIDE},
+        1: {cellWidth:(W - 2*M) * 0.25, halign:"center", valign:"middle",
+            fillColor:[240,240,240], fontStyle:"bold", fontSize:NOTE_SZ * 1.15},
+        2: {cellWidth:SIDE}
+      },
+      didParseCell: function(d){
+        if(d.section !== "body") return;
+        var g = draw[d.row.index];
+        if(!g) return;
+        if(d.column.index === 1){ d.cell.styles.minCellHeight = g.h; return; }
+        var list = g[d.column.index];
+        if(!list || !list.length) return;
+        d.cell.text = [" "];
+        d.cell.styles.fontSize = NOTE_SZ;
+        d.cell.styles.minCellHeight = g.h;
+      },
+      didDrawCell: function(d){
+        if(d.section !== "body") return;
+        var g = draw[d.row.index];
+        var list = g && g[d.column.index];
+        if(!list || !list.length) return;
+        var x = d.cell.x, y = d.cell.y, w = d.cell.width, cur = y + PAD;
+        list.forEach(function(e, i){
+          if(i){
+            cur += NOTE_LH * 0.55;
+            target.setDrawColor(205, 205, 205); target.setLineWidth(0.4);
+            target.line(x + PAD, cur - NOTE_LH * 0.28, x + w - PAD, cur - NOTE_LH * 0.28);
+          }
+          if(e.sub){
+            target.setFont("helvetica", "normal"); target.setFontSize(NOTE_SZ * 0.92);
+            target.setTextColor(125, 125, 125);
+            target.text(e.sub.toUpperCase(), x + PAD, cur + NOTE_LH * 0.78);
+            cur += NOTE_LH;
+          }
+          var ty = cur + HEAD_SZ * 0.82;
+          target.setFont("helvetica", "bold"); target.setFontSize(HEAD_SZ);
+          target.setTextColor(15, 15, 15);
+          target.text(e.date, x + PAD, ty);
+          if(e.miles) target.text(e.miles, x + PAD + SIDE * 0.42, ty);
+          target.setFont("helvetica", "normal"); target.setFontSize(NOTE_SZ);
+          target.setTextColor(105, 105, 105);
+          e.wrapped.forEach(function(ln, k){
+            target.text(ln, x + w - PAD, ty + NOTE_LH * (k + 1), {align:"right"});
+          });
+          cur += HEAD_LH + e.wrapped.length * NOTE_LH;
+        });
+        target.setTextColor(20, 20, 20);
+      }
+      });
+    }
+
+    if(resets.length){
+      var y = doc.lastAutoTable.finalY + 20;
+      doc.setFontSize(10); doc.setTextColor(70);
+      doc.text(doc.splitTextToSize(resets.join("      "), W - 2*M), M, y);
+      doc.setTextColor(0);
+    }
+
+    /* ---- page 2: everything else, back to portrait ---- */
+    doc.addPage("letter", "portrait");
+    var W2 = doc.internal.pageSize.getWidth();
+    heading("Home & Property", W2, 17);
+    var order = [], byGroup = {}, STOW = "Off Season & Reference";
+    assetsSorted().forEach(function(a){
+      if((a.group || "") === "Vehicles") return;
+      var g = a.stored ? STOW : ((a.group || "Other").trim() || "Other");
+      if(!byGroup[g]){ byGroup[g] = []; order.push(g); }
+      byGroup[g].push(a);
+    });
+    var si = order.indexOf(STOW);
+    if(si > -1){ order.splice(si, 1); order.push(STOW); }
+
+    var body2 = [];
+    order.forEach(function(g){
+      body2.push([{content:g.toUpperCase(), colSpan:4,
+        styles:{fillColor:[232,232,232], fontStyle:"bold", fontSize:7.5, textColor:[60,60,60]}}]);
+      byGroup[g].forEach(function(a){
+        var ts = tasksFor(a.id), spec = (a.specs || []).map(function(p){
+          return p.k + " " + p.v;
+        }).join("  ·  ");
+        if(!ts.length){
+          body2.push([{content:a.name, styles:{fontStyle:"bold"}},
+            {content:spec || "reference only", colSpan:3, styles:{textColor:[110,110,110]}}]);
+          return;
+        }
+        ts.forEach(function(t, i){
+          var st = statusOf(t, a);
+          body2.push([
+            i === 0 ? {content:a.name, styles:{fontStyle:"bold"}} : "",
+            t.name,
+            t.lastDate ? fmtDate(t.lastDate) : "—",
+            (t.intervalMiles > 0 || t.intervalDays > 0) ? (st.dueLabel || st.label) : "log only"
+          ]);
+        });
+        if(spec){
+          body2.push(["", {content:spec, colSpan:3,
+            styles:{textColor:[125,125,125], fontSize:6.6}}]);
+        }
+      });
+    });
+
+    doc.autoTable({
+      startY: 86,
+      head: [["Item", "Task", "Last done", "Next"]],
+      body: body2,
+      theme: "grid",
+      margin: {left:M, right:M, top:52},
+      styles: {font:"helvetica", fontSize:7.4, cellPadding:2.6, lineColor:[170,170,170],
+               lineWidth:0.4, textColor:[20,20,20]},
+      headStyles: {fillColor:[255,255,255], textColor:[0,0,0], fontSize:8.5,
+                   fontStyle:"bold", lineWidth:{bottom:1.2, top:0.4, left:0.4, right:0.4}},
+      columnStyles: {
+        0: {cellWidth:(W2 - 2*M) * 0.26},
+        1: {cellWidth:(W2 - 2*M) * 0.34},
+        2: {cellWidth:(W2 - 2*M) * 0.16},
+        3: {cellWidth:(W2 - 2*M) * 0.24, textColor:[70,70,70]}
+      }
+    });
+
+    return doc.output("blob");
+  }
+
+  $("printBtn").addEventListener("click", function(){
+    if(!S.ready){ toast("Still loading — try again in a moment."); return; }
+    var blob;
+    try { blob = buildPdf(); }
+    catch(e){ toast("Could not build the PDF."); return; }
+    if(!blob){ toast("PDF library didn't load — check your connection and reload."); return; }
+    claude.use("downloads").then(function(dl){
+      if(!dl){ toast("This viewer can't save files."); return; }
+      return dl.save({filename: "chore-factory-" + todayISO() + ".pdf", data: blob})
+        .then(function(){ toast("PDF saved"); })
+        .catch(function(err){
+          if(err && err.code === "declined") return;
+          toast("Could not save the PDF" + (err && err.code ? " (" + err.code + ")" : "") + ".");
+        });
+    });
+  });
+
+  /* ---------- theme ---------- */
+  /* The canonical toggle from 1.Claude\_standard-wrapper.html. Light is the
+     default and nothing here reads the OS setting. */
+  (function(){
+    var KEY = "bw-theme-chorefactory";
+    var SUN = "\u2600", MOON = "\u263e";
+    var root = document.documentElement,
+        btn = $("theme-toggle"),
+        glyph = $("theme-glyph");
+
+    function current(){ return root.getAttribute("data-theme") || "light"; }
+    function paint(){
+      var dark = current() === "dark";
+      glyph.textContent = dark ? SUN : MOON;
+      btn.setAttribute("aria-label", dark ? "Switch to light mode" : "Switch to dark mode");
+    }
+    try {
+      var saved = localStorage.getItem(KEY);
+      if(saved === "dark" || saved === "light") root.setAttribute("data-theme", saved);
+    } catch(e){}
+    paint();
+    btn.addEventListener("click", function(){
+      var next = current() === "dark" ? "light" : "dark";
+      root.setAttribute("data-theme", next);
+      try { localStorage.setItem(KEY, next); } catch(e){}
+      paint();
+    });
+  })();
+
+  /* ---------- one-tap actions ---------- */
+  /* Paired tasks are ones always done together — one tap logs both. */
+  function markDone(taskId){
+    var t = taskById(taskId); if(!t) return;
+    var list = [t], p = t.pairedWith ? taskById(t.pairedWith) : null;
+    if(p) list.push(p);
+    var date = todayISO(), chain = Promise.resolve();
+    list.forEach(function(tk){
+      var a = assetById(tk.assetId);
+      var reading = (a && a.unit) ? a.reading : null;
+      chain = chain.then(function(){
+        return save("tasks/" + tk.id, Object.assign(stripId(tk),
+          {lastDate:date, lastReading:reading, snoozeUntil:""}));
+      }).then(function(){
+        return save("logs/" + newId("lg"), {taskId:tk.id, assetId:tk.assetId, name:tk.name,
+                                            date:date, reading:reading, note:"", ts:Date.now()});
+      });
+    });
+    /* Replacing the part starts its upkeep over: the old rinse log belongs to
+       the old filter. The replacement's own history is what survives. */
+    chain.then(function(){
+      var targets = resetTargets(t);
+      if(!targets.length) return null;
+      var c = Promise.resolve();
+      targets.forEach(function(target){
+        c = c.then(function(){
+          return Promise.all(S.logs.filter(function(l){ return l.taskId === target.id; })
+            .map(function(l){ return S.db.doc("logs/" + l.id).delete(); }));
+        }).then(function(){
+          return save("tasks/" + target.id,
+            Object.assign(stripId(target), {lastDate:date, snoozeUntil:""}));
+        });
+      });
+      return c.then(function(){
+        return targets.map(function(x){ return x.name; }).join(" + ");
+      });
+    }).then(function(reset){
+      toast("Done — " + list.map(function(x){ return x.name; }).join(" + ") +
+        (reset ? " · " + reset + " history cleared" : ""));
+    }).catch(function(){});
+  }
+  function postpone(taskId){
+    var t = taskById(taskId); if(!t) return;
+    var until = addMonths(t.snoozeUntil, 1);
+    save("tasks/" + t.id, Object.assign(stripId(t), {snoozeUntil:until}))
+      .then(function(){ toast(t.name + " — postponed to " + fmtDate(until)); })
+      .catch(function(){});
+  }
+
+  /* ---------- dialogs ---------- */
+  var ctx = {};
+
+  /* Two-tap delete: sandboxed frames can swallow confirm(), so arm in place. */
+  function armDelete(btn, run){
+    var timer = null;
+    function disarm(){ btn.dataset.armed = ""; btn.textContent = "Delete"; clearTimeout(timer); }
+    btn.disarm = disarm;
+    btn.addEventListener("click", function(){
+      if(btn.dataset.armed === "1"){ disarm(); run(); return; }
+      btn.dataset.armed = "1";
+      btn.textContent = "Tap again to delete";
+      timer = setTimeout(disarm, 4000);
+    });
+  }
+
+  function openLog(taskId){
+    var t = taskById(taskId); if(!t) return;
+    var a = assetById(t.assetId);
+    ctx.log = {task:t, asset:a};
+    $("logTitle").textContent = t.name;
+    $("logSub").textContent = (a ? a.name : "") + " · " + intervalLabel(t, a);
+    $("logDate").value = todayISO();
+    $("logReadWrap").hidden = !(a && a.unit);
+    $("logRead").value = (a && a.reading != null) ? a.reading : "";
+    $("logRead").previousElementSibling.textContent = (a && a.unit === "hr") ? "Hours" : "Odometer";
+    $("logNote").value = "";
+    $("logHint").textContent = t.note ? t.note : "";
+    $("dlgLog").showModal();
+  }
+  $("dlgLog").addEventListener("close", function(){
+    if($("dlgLog").returnValue !== "save" || !ctx.log) return;
+    var t = ctx.log.task, a = ctx.log.asset;
+    var date = $("logDate").value || todayISO();
+    var readRaw = $("logRead").value;
+    var reading = (a && a.unit && readRaw !== "") ? Number(readRaw) : null;
+    var note = $("logNote").value.trim();
+
+    save("tasks/" + t.id, Object.assign(stripId(t), {lastDate:date, lastReading:reading, snoozeUntil:""}))
+      .then(function(){
+        return save("logs/" + newId("lg"), {taskId:t.id, assetId:t.assetId, name:t.name,
+                                            date:date, reading:reading, note:note, ts:Date.now()});
+      })
+      .then(function(){
+        if(a && a.unit && reading != null && (a.reading == null || reading > a.reading)){
+          return save("assets/" + a.id, Object.assign(stripId(a), {reading:reading, readingDate:date}));
+        }
+      })
+      .then(function(){ toast("Logged — " + t.name); })
+      .catch(function(){});
+  });
+
+  function openTask(taskId, assetId){
+    var t = taskId ? taskById(taskId) : null;
+    var a = assetById(t ? t.assetId : assetId);
+    ctx.task = {task:t, assetId: a ? a.id : assetId, snooze: (t && t.snoozeUntil) || ""};
+    showSnooze();
+    $("taskTitle").textContent = t ? "Edit task" : "New task";
+    $("taskSub").textContent = a ? a.name : "";
+    $("tkName").value = t ? t.name : "";
+    $("tkMilesWrap").hidden = !(a && a.unit);
+    $("tkMilesWrap").firstElementChild.textContent = "Every — " + ((a && a.unit === "hr") ? "hours" : "miles");
+    $("tkMiles").value = (t && t.intervalMiles) ? t.intervalMiles : "";
+    var days = t ? (t.intervalDays || 0) : 0;
+    if(days && days % 7 === 0 && days < 60){ $("tkUnit").value = "7"; $("tkEvery").value = days/7; }
+    else if(days >= 360 && Math.abs(days/365.25 - Math.round(days/365.25)) < 0.05){ $("tkUnit").value = "365.25"; $("tkEvery").value = Math.round(days/365.25); }
+    else if(days){ $("tkUnit").value = "30.44"; $("tkEvery").value = Math.round(days/30.44); }
+    else { $("tkUnit").value = "30.44"; $("tkEvery").value = ""; }
+    $("tkDate").value = (t && t.lastDate) ? t.lastDate : "";
+    $("tkReadWrap").hidden = !(a && a.unit);
+    $("tkRead").value = (t && t.lastReading != null) ? t.lastReading : "";
+    $("tkNote").value = (t && t.note) ? t.note : "";
+    $("tkDelete").hidden = !t || S.readOnly;
+    $("tkDelete").disarm();
+
+    var hist = t ? S.logs.filter(function(l){ return l.taskId === t.id; })
+                        .sort(function(x,y){ return (y.ts||0)-(x.ts||0); }) : [];
+    $("tkHist").innerHTML = hist.length
+      ? hist.map(function(l){
+          return "<li><span class='d'>" + fmtDate(l.date) + "</span><span class='n'>" +
+            esc(l.note || "—") + "</span><span class='r'>" +
+            (l.reading != null ? num(l.reading) : "") + "</span></li>";
+        }).join("")
+      : "<li class='hist-empty'>No entries logged here yet.</li>";
+    $("dlgTask").showModal();
+  }
+  function showSnooze(){
+    var s = ctx.task && ctx.task.snooze;
+    $("tkSnoozeWrap").hidden = !s;
+    if(s) $("tkSnoozeTxt").textContent = "Not nagging until " + fmtDate(s) + ".";
+  }
+  $("tkSnoozeClear").addEventListener("click", function(){
+    if(ctx.task) ctx.task.snooze = "";
+    showSnooze();
+  });
+
+  armDelete($("tkDelete"), function(){
+    var t = ctx.task && ctx.task.task; if(!t) return;
+    $("dlgTask").close("deleted");
+    S.db.doc("tasks/" + t.id).delete().then(function(){
+      return Promise.all(S.logs.filter(function(l){ return l.taskId === t.id; })
+        .map(function(l){ return S.db.doc("logs/" + l.id).delete(); }));
+    }).then(function(){ toast("Deleted " + t.name); }).catch(fail);
+  });
+  $("dlgTask").addEventListener("close", function(){
+    if($("dlgTask").returnValue !== "save" || !ctx.task) return;
+    var t = ctx.task.task;
+    var a = assetById(ctx.task.assetId);
+    var every = Number($("tkEvery").value);
+    var days = every > 0 ? Math.round(every * Number($("tkUnit").value)) : 0;
+    var body = {
+      assetId: ctx.task.assetId,
+      name: ($("tkName").value || "Untitled").trim(),
+      intervalMiles: (a && a.unit && $("tkMiles").value !== "") ? Number($("tkMiles").value) : 0,
+      intervalDays: days,
+      lastDate: $("tkDate").value || "",
+      lastReading: (a && a.unit && $("tkRead").value !== "") ? Number($("tkRead").value) : null,
+      note: $("tkNote").value.trim(),
+      snoozeUntil: ctx.task.snooze || "",
+      pairedWith: (t && t.pairedWith) || "",
+      resetsHistoryOf: (t && t.resetsHistoryOf) || "",
+      order: t ? (t.order || 0) : (tasksFor(ctx.task.assetId).length + 1) * 10
+    };
+    save("tasks/" + (t ? t.id : newId("tk")), body).then(function(){ toast("Saved"); }).catch(function(){});
+  });
+
+  function openAsset(assetId){
+    var a = assetId ? assetById(assetId) : null;
+    ctx.asset = a;
+    $("asTitle").textContent = a ? "Edit item" : "New item";
+    $("asName").value = a ? a.name : "";
+    $("asGroup").value = a ? (a.group || "") : "";
+    $("asKind").value = a ? (a.kind || "") : "";
+    $("asUnit").value = a ? (a.unit || "") : "";
+    $("asRead").value = (a && a.reading != null) ? a.reading : "";
+    $("asReadDate").value = (a && a.readingDate) ? a.readingDate : todayISO();
+    $("asSpecs").value = a && a.specs ? a.specs.map(function(s){ return s.k + ": " + s.v; }).join("\n") : "";
+    $("asStored").checked = !!(a && a.stored);
+    $("asDelete").hidden = !a || S.readOnly;
+    $("asDelete").disarm();
+    $("dlgAsset").showModal();
+  }
+  armDelete($("asDelete"), function(){
+    var a = ctx.asset; if(!a) return;
+    $("dlgAsset").close("deleted");
+    var kill = [S.db.doc("assets/" + a.id).delete()];
+    S.tasks.forEach(function(t){ if(t.assetId === a.id) kill.push(S.db.doc("tasks/" + t.id).delete()); });
+    S.logs.forEach(function(l){ if(l.assetId === a.id) kill.push(S.db.doc("logs/" + l.id).delete()); });
+    Promise.all(kill).then(function(){ toast("Deleted " + a.name); }).catch(fail);
+  });
+  $("dlgAsset").addEventListener("close", function(){
+    if($("dlgAsset").returnValue !== "save") return;
+    var a = ctx.asset;
+    var unit = $("asUnit").value;
+    var specs = $("asSpecs").value.split("\n").map(function(line){
+      var i = line.indexOf(":");
+      if(i < 1) return line.trim() ? {k:"Note", v:line.trim()} : null;
+      return {k:line.slice(0,i).trim(), v:line.slice(i+1).trim()};
+    }).filter(Boolean);
+    var body = {
+      name: ($("asName").value || "Untitled").trim(),
+      group: $("asGroup").value.trim() || "Other",
+      kind: $("asKind").value.trim(),
+      unit: unit,
+      reading: (unit && $("asRead").value !== "") ? Number($("asRead").value) : null,
+      readingDate: unit ? ($("asReadDate").value || todayISO()) : "",
+      specs: specs,
+      stored: $("asStored").checked,
+      order: a ? (a.order || 0) : (S.assets.length + 1) * 10
+    };
+    save("assets/" + (a ? a.id : newId("as")), body).then(function(){ toast("Saved"); }).catch(function(){});
+  });
+
+  function openOdo(assetId){
+    var a = assetById(assetId); if(!a) return;
+    ctx.odo = a;
+    $("odoTitle").textContent = a.unit === "hr" ? "Hour meter" : "Odometer";
+    $("odoSub").textContent = a.name;
+    $("odoLbl").textContent = a.unit === "hr" ? "Hours" : "Miles";
+    $("odoVal").value = a.reading != null ? a.reading : "";
+    $("odoDate").value = todayISO();
+    $("dlgOdo").showModal();
+    $("odoVal").select();
+  }
+  $("dlgOdo").addEventListener("close", function(){
+    if($("dlgOdo").returnValue !== "save" || !ctx.odo) return;
+    var a = ctx.odo;
+    save("assets/" + a.id, Object.assign(stripId(a), {
+      reading: $("odoVal").value !== "" ? Number($("odoVal").value) : null,
+      readingDate: $("odoDate").value || todayISO()
+    })).then(function(){ toast("Reading updated"); }).catch(function(){});
+  });
+
+  /* ---------- events ---------- */
+  document.addEventListener("click", function(e){
+    if(swallowClick) return;
+    if(e.target.closest("#horizonBtn")){ S.showAll = !S.showAll; render(); return; }
+    if(e.target.closest("#showHush")){ S.showHush = !S.showHush; renderInv(); return; }
+    var rc = e.target.closest("[data-rc-clear],[data-rc-again],[data-rc-reopen],[data-rc-all],[data-rc-more]");
+    if(rc){
+      if(rc.dataset.rcMore){ S.recMore = !S.recMore; renderRec(); return; }
+      if(rc.dataset.rcAll){ checkAll(); return; }
+      var rid = rc.dataset.rcClear || rc.dataset.rcAgain || rc.dataset.rcReopen, rit = itemById(rid);
+      if(!rit) return;
+      if(rc.dataset.rcAgain){
+        if(S.recBusy[rid]) return;
+        S.recBusy[rid] = 1; if(S.tab === "rec") renderRec();
+        recheck(rit).then(function(rec){ toast(checkToast(rec)); })
+          .catch(function(er){ toast(recallMsg(er)); })
+          .then(function(){ delete S.recBusy[rid]; if(S.tab === "rec") renderRec(); });
+        return;
+      }
+      if(!rit.recall) return;
+      var nrec = rc.dataset.rcClear ? clearedByOwner(rit.recall) : reopened(rit.recall);
+      setRecall(rit, nrec).then(function(){
+        toast(rc.dataset.rcClear ? "Cleared — marked as checked by you" : "Reopened");
+      }).catch(function(){});
+      return;
+    }
+    var dz = e.target.closest("[data-dismiss],[data-undismiss]");
+    if(dz){
+      var did = dz.dataset.dismiss || dz.dataset.undismiss, off = !!dz.dataset.dismiss;
+      var t = null;
+      for(var z = 0; z < S.inv.length; z++) if(S.inv[z].id === did) t = S.inv[z];
+      if(!t || !t.recall) return;
+      var rec = Object.assign({}, t.recall, {dismissed:off});
+      save("inventory/" + t.id, Object.assign(stripId(t), {recall:rec}))
+        .then(function(){ toast(off ? "Dismissed" : "Restored"); }).catch(function(){});
+      return;
+    }
+    var gt = e.target.closest("[data-grp]");
+    if(gt){
+      var g = gt.dataset.grp;
+      if(S.shut[g]) delete S.shut[g]; else S.shut[g] = 1;
+      saveShut(); renderInv(); return;
+    }
+    if(e.target.closest("#grpAll")){
+      var allShut = Object.keys(S.shut).length > 0;
+      S.shut = {};
+      if(!allShut){
+        S.inv.forEach(function(it){ S.shut[it.category || "Uncategorized"] = 1; });
+      }
+      saveShut(); renderInv(); return;
+    }
+    var sp = e.target.closest("[data-spot]");
+    if(sp){ S.spot = sp.dataset.spot; renderInv(); return; }
+    var bx = e.target.closest("[data-box]");
+    if(bx){ S.openBox = (S.openBox === bx.dataset.box) ? "" : bx.dataset.box; renderInv(); return; }
+    var iv = e.target.closest("[data-item]");
+    if(iv) return openItem(iv.dataset.item);
+    var el = e.target.closest("[data-done],[data-snooze],[data-log],[data-task],[data-newtask],[data-edit],[data-odo]");
+    if(!el) return;
+    if(el.dataset.done) return markDone(el.dataset.done);
+    if(el.dataset.snooze) return postpone(el.dataset.snooze);
+    if(el.dataset.log !== undefined && el.dataset.log) return openLog(el.dataset.log);
+    if(el.dataset.task) return openTask(el.dataset.task);
+    if(el.dataset.newtask) return openTask(null, el.dataset.newtask);
+    if(el.dataset.edit) return openAsset(el.dataset.edit);
+    if(el.dataset.odo) return openOdo(el.dataset.odo);
+  });
+  $("addAsset").addEventListener("click", function(){ openNewItem(); });
+  $("addTracked").addEventListener("click", function(){ openAsset(null); });
+  /* Escape closes a dialog without touching its last returnValue — make it a cancel. */
+  Array.prototype.forEach.call(document.querySelectorAll("dialog"), function(d){
+    d.addEventListener("cancel", function(){ d.returnValue = "cancel"; });
+  });
+
+  /* ---------- boot ---------- */
+  function mark(k){ S.loaded[k] = true; if(S.loaded.assets && S.loaded.tasks && S.loaded.logs && S.loaded.inv){ S.ready = true; render(); } }
+  function snap(q){ return q.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); }); }
+
+  (window.claude && window.claude.use ? window.claude.use("db") : Promise.resolve(null))
+  .then(function(db){
+    if(!db){
+      $("loading").hidden = true;
+      $("banner").innerHTML = '<div class="banner">Could not reach the saved data. Use the sync button at the top.</div>';
+      return;
+    }
+    S.db = db;
+    db.collection("assets").onSnapshot(function(q){ S.assets = snap(q); mark("assets"); render(); }, errBanner);
+    db.collection("tasks").onSnapshot(function(q){ S.tasks = snap(q); mark("tasks"); render(); }, errBanner);
+    db.collection("logs").onSnapshot(function(q){ S.logs = snap(q); mark("logs"); render(); }, errBanner);
+    db.collection("inventory").onSnapshot(function(q){
+      S.inv = snap(q).sort(function(a, b){ return (a.order||0) - (b.order||0); });
+      mark("inv");
+      if(S.tab === "inv") renderInv(); else if(S.ready) $("invN").textContent = S.inv.length;
+      if(S.ready){ recBadge(); if(S.tab === "rec") renderRec(); }
+    }, errBanner);
+
+    window.claude.use("assets").then(function(a){ S.store = a; }).catch(function(){});
+    window.claude.use("sample").then(function(fn){
+      if(!fn) return;
+      S.sample = fn;
+      if(S.tab === "rec") renderRec();
+      return fn.limits().then(function(l){ S.sampleImg = !!(l && l.images); }).catch(function(){});
+    }).catch(function(){});
+
+    if(window.claude.use) window.claude.use("user").then(function(u){
+      if(!u || !u.can) return;
+      return Promise.resolve(u.can("data.write")).then(function(w){
+        if(w === false){ S.readOnly = true; render(); }
+      });
+    }).catch(function(){});
+  })
+  .catch(function(){ $("loading").textContent = "Could not reach saved data."; });
+
+  function errBanner(){
+    $("banner").innerHTML = '<div class="banner">Lost the live connection to saved data. Reload the page to reconnect.</div>';
+  }
+})();
+</script>
+
+</body></html>

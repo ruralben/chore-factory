@@ -1,0 +1,151 @@
+{
+ "generated": "2026-11-11",
+ "horizon": 14,
+ "live": true,
+ "tasks": [
+  {
+   "t": "Engine & cabin air filters",
+   "i": "2019 Subaru Impreza Limited",
+   "d": "2026-09-26",
+   "s": "2026-11-30"
+  },
+  {
+   "t": "Softener salt",
+   "i": "Morton Water Softener",
+   "d": "2026-10-31",
+   "s": "2026-11-30"
+  },
+  {
+   "t": "Clarifier + phosphate remover",
+   "i": "Hot Springs Flash",
+   "d": "2026-11-19",
+   "s": ""
+  },
+  {
+   "t": "Spray rinse",
+   "i": "Hot Springs Flash",
+   "d": "2026-11-21",
+   "s": ""
+  },
+  {
+   "t": "Filter chemical soak",
+   "i": "Hot Springs Flash",
+   "d": "2026-11-22",
+   "s": ""
+  },
+  {
+   "t": "Water fill",
+   "i": "Hot Springs Flash",
+   "d": "2026-12-22",
+   "s": ""
+  },
+  {
+   "t": "Vacuum filter",
+   "i": "Greenworks Vacuum",
+   "d": "2026-12-31",
+   "s": ""
+  },
+  {
+   "t": "Oil & filter",
+   "i": "2014 Toyota Sienna XLE",
+   "d": "2027-02-01",
+   "s": ""
+  },
+  {
+   "t": "Furnace filter",
+   "i": "Furnace",
+   "d": "2027-02-09",
+   "s": ""
+  },
+  {
+   "t": "Oil & filter (LOF)",
+   "i": "2019 Subaru Impreza Limited",
+   "d": "2027-02-09",
+   "s": ""
+  },
+  {
+   "t": "Fridge water filter",
+   "i": "Samsung Refrigerator",
+   "d": "2027-02-21",
+   "s": ""
+  },
+  {
+   "t": "CF filter",
+   "i": "Waterdrop RO System",
+   "d": "2027-03-13",
+   "s": ""
+  },
+  {
+   "t": "Oil change",
+   "i": "Husqvarna 924HV Snow Thrower",
+   "d": "2027-03-28",
+   "s": ""
+  },
+  {
+   "t": "Spark plug",
+   "i": "Husqvarna 924HV Snow Thrower",
+   "d": "2027-03-28",
+   "s": ""
+  },
+  {
+   "t": "Cleanout cycle",
+   "i": "LG Washing Machine",
+   "d": "2027-04-15",
+   "s": ""
+  },
+  {
+   "t": "Replace filter",
+   "i": "Keurig coffee machine",
+   "d": "2027-05-05",
+   "s": ""
+  },
+  {
+   "t": "Purifier filter",
+   "i": "Coway Air Purifier",
+   "d": "2027-06-01",
+   "s": ""
+  },
+  {
+   "t": "A/C pan treatment",
+   "i": "Carrier A/C",
+   "d": "2027-06-01",
+   "s": ""
+  },
+  {
+   "t": "Oil change",
+   "i": "WEN 56380i Generator",
+   "d": "2027-07-29",
+   "s": ""
+  },
+  {
+   "t": "Engine & cabin air filters",
+   "i": "2014 Toyota Sienna XLE",
+   "d": "2027-08-02",
+   "s": ""
+  },
+  {
+   "t": "CB filter",
+   "i": "Waterdrop RO System",
+   "d": "2027-09-11",
+   "s": ""
+  },
+  {
+   "t": "Treat sink drains",
+   "i": "Sink Drains",
+   "d": "2027-09-22",
+   "s": ""
+  },
+  {
+   "t": "Clean filter",
+   "i": "Comfee Dehumidifier",
+   "d": "2027-10-31",
+   "s": ""
+  },
+  {
+   "t": "RO membrane",
+   "i": "Waterdrop RO System",
+   "d": "2028-09-10",
+   "s": ""
+  }
+ ]
+}

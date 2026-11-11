@@ -862,7 +862,7 @@ ul.ps-tasks .d{font-family:"Barlow", system-ui, sans-serif; white-space:nowrap; 
   <form method="dialog">
     <div class="d-hd"><h4 id="asTitle">Item</h4><p>Vehicle, machine or system</p></div>
     <div class="d-body">
-      <div class="field"><label for="asName">Name</label><input type="text" id="asName" required placeholder="2014 Toyota Sienna XLE"></div>
+      <div class="field"><label for="asName">Name</label><input type="text" id="asName" required placeholder="2020 pickup, furnace, mower"></div>
       <div class="field">
         <label for="asGroup">Area</label>
         <input type="text" id="asGroup" list="groupList" placeholder="Home">
@@ -1155,7 +1155,17 @@ ul.ps-tasks .d{font-family:"Barlow", system-ui, sans-serif; white-space:nowrap; 
     (subs[c] || []).forEach(function(cb){ try { cb(snap); } catch(e){ console.error(e); } });
   }
   function fireAll(){ COLS.forEach(fire); }
-  function rebuildView(){ view = applyOps(clone(remote.data), pending); fireAll(); }
+  /* The house layout and machine labels name family members, so they ride
+     inside the locked file and reach the page here, before anything draws. */
+  var configListeners = [], config = null;
+  function sendConfig(){
+    if(!remote || !remote.data.config) return;
+    var c = JSON.stringify(remote.data.config);
+    if(c === config) return;
+    config = c;
+    configListeners.forEach(function(f){ try { f(JSON.parse(c)); } catch(e){ console.error(e); } });
+  }
+  function rebuildView(){ sendConfig(); view = applyOps(clone(remote.data), pending); fireAll(); }
 
   /* ---------- saving ---------- */
   var timer = null, busy = false, retryTimer = null;
@@ -1381,6 +1391,7 @@ ul.ps-tasks .d{font-family:"Barlow", system-ui, sans-serif; white-space:nowrap; 
 
   /* ---------- for the sync panel ---------- */
   window.CFSync = {
+    onConfig:function(f){ configListeners.push(f); if(config) f(JSON.parse(config)); },
     onStatus:function(f){ statusListeners.push(f); f(status); },
     status:function(){ return status; },
     hasToken:function(){ return !!token(); },
@@ -1921,14 +1932,14 @@ ul.ps-tasks .d{font-family:"Barlow", system-ui, sans-serif; white-space:nowrap; 
       }).join("") + "</svg>";
   }
 
-  var HOUSE_NAME = "Winchester";
+  var HOUSE_NAME = "Home";
 
   /* The house as it actually stacks. Any room in the data that isn't listed
      here lands in "Elsewhere" at the bottom, so adding one needs no code. */
   var LEVELS = [
     {name:"Top level",  rooms:["Bedrooms"]},
     {name:"Ground",     rooms:["Kitchen", "Mudroom", "Garage", "Outside"], outside:true},
-    {name:"Sublevel",   rooms:["Family room", "Ben's office", "Tara & Kids office"]},
+    {name:"Sublevel",   rooms:["Family room"]},
     {name:"Lowest",     rooms:["Basement", "Utility"]},
     {name:"Not placed",  rooms:["Unassigned"], unplaced:true}
   ];
@@ -1954,10 +1965,6 @@ ul.ps-tasks .d{font-family:"Barlow", system-ui, sans-serif; white-space:nowrap; 
   /* A build is a machine you own as a unit; a bin is a pile you pick from.
      Both collapse to one chip, but only the machine is a working system. */
   var BOXES = {
-    "PC.2018.BEN":   {kind:"desktop", label:"PC.2018.BEN"},
-    "PC.2019.Truman":{kind:"desktop", label:"PC.2019.Truman"},
-    "PC.2020.Calvin":{kind:"desktop", label:"PC.2020.Calvin"},
-    "PC2024.BEN":    {kind:"desktop", label:"PC2024.BEN"},
     "PC spares":     {kind:"bin",     label:"PC spares"}
   };
   /* Containers you put things into, as opposed to machines derived from a
@@ -1965,6 +1972,13 @@ ul.ps-tasks .d{font-family:"Barlow", system-ui, sans-serif; white-space:nowrap; 
   var BINS = {
     "Storage Box": {kind:"bin", label:"Storage Box", room:"Basement", placed:true}
   };
+  /* The household's own names arrive with the data. */
+  if(window.CFSync) window.CFSync.onConfig(function(c){
+    if(c.houseName) HOUSE_NAME = c.houseName;
+    if(c.levels && c.levels.length) LEVELS = c.levels;
+    if(c.boxes) BOXES = c.boxes;
+    if(c.bins) BINS = c.bins;
+  });
   function boxOf(it){
     if(it.sold || S.showSold) return null;
     if(it.box && BINS[it.box]) return it.box;

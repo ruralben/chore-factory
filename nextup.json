@@ -10,12 +10,6 @@
    "s": "2026-11-30"
   },
   {
-   "t": "Softener salt",
-   "i": "Morton Water Softener",
-   "d": "2026-10-31",
-   "s": "2026-11-30"
-  },
-  {
    "t": "Spray rinse",
    "i": "Hot Springs Flash",
    "d": "2026-11-21",
@@ -67,6 +61,12 @@
    "t": "Fridge water filter",
    "i": "Samsung Refrigerator",
    "d": "2027-02-21",
+   "s": ""
+  },
+  {
+   "t": "Softener salt",
+   "i": "Morton Water Softener",
+   "d": "2027-02-23",
    "s": ""
   },
   {

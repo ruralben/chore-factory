@@ -16,12 +16,6 @@
    "s": "2026-11-30"
   },
   {
-   "t": "Clarifier + phosphate remover",
-   "i": "Hot Springs Flash",
-   "d": "2026-11-19",
-   "s": ""
-  },
-  {
    "t": "Spray rinse",
    "i": "Hot Springs Flash",
    "d": "2026-11-21",
@@ -31,6 +25,12 @@
    "t": "Filter chemical soak",
    "i": "Hot Springs Flash",
    "d": "2026-11-22",
+   "s": ""
+  },
+  {
+   "t": "Clarifier + phosphate remover",
+   "i": "Hot Springs Flash",
+   "d": "2026-12-04",
    "s": ""
   },
   {
